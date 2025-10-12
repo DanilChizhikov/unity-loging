@@ -1,0 +1,18 @@
+{
+    "name": "com.dtech.logging.editor",
+    "rootNamespace": "DTech",
+    "references": [
+      "GUID:22adc5d9e74a4106a6fd2dead063354c"
+    ],
+    "includePlatforms": [
+      "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
