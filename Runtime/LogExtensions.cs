@@ -1,3 +1,6 @@
+using System.Text;
+using System.Text.RegularExpressions;
+
 namespace DTech.Logging
 {
 	internal static class LogExtensions
@@ -22,6 +25,30 @@ namespace DTech.Logging
 			}
 
 			return CanSendDefaultPriority;
+		}
+		
+		public static StringBuilder AppendTags(this StringBuilder builder, params string[] tags)
+		{
+			for (int i = 0; i < tags.Length; i++)
+			{
+				string tag = tags[i];
+				builder.Append($"[{tag}]");
+			}
+			
+			return builder;
+		}
+		
+		public static string CleanColorTags(this string log)
+		{
+			if (string.IsNullOrEmpty(log))
+			{
+				return log;
+			}
+			
+			log = Regex.Replace(log, @"^<color=.*?>", string.Empty);
+			log = Regex.Replace(log, @"</color>$", string.Empty);
+			
+			return log;
 		}
 	}
 }
