@@ -13,7 +13,7 @@
     "repository": {
         "type": "git",
         "url": "ssh://github.com:DanilChizhikov/unity-loging.git",
-        "directory": "com.dtech.logging"
+        "directory": "com.dtech"
     },
     "publishConfig": {
         "registry": "https://npm.pkg.github.com/@DanilChizhikov"
