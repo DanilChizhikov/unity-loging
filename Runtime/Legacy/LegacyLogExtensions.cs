@@ -51,7 +51,7 @@ namespace DTech.Logging
 			logger.ThrowIfNull();
 			if (priority.IsAvailableToSend())
 			{
-				string logBody = GetLog(White, message.ToString(), tags);
+				string logBody = GetLog(Yellow, message.ToString(), tags);
 				Debug.LogWarning(logBody);
 			}
 		}
@@ -70,7 +70,7 @@ namespace DTech.Logging
 			logger.ThrowIfNull();
 			if (priority.IsAvailableToSend())
 			{
-				string logBody = GetLog(White, message.ToString(), tags);
+				string logBody = GetLog(Red, message.ToString(), tags);
 				Debug.LogError(logBody);
 			}
 		}
