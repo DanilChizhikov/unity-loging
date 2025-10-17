@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.3.0] - 2025-10-17
+
+### Changed
+- **Logging**
+  - Refactored log system
+
+### Added
+- **Logging**
+  - LogLevel
+  - Internal loggers
+    - UnityLogger
+    - FileLogger
+  - Generic loggers ``ILoggerT<>`` and ``LoggerT<>``
+
 ## [0.2.0] - 2025-10-14
 
 ### Added
