@@ -45,9 +45,19 @@ namespace DTech.Logging
 
 		public override void Log<TState>(LogLevel logLevel, Exception exception, Func<Exception, string> formatter)
 		{
-			string level = logLevel.ToString().Substring(0, 4);
+			string level = logLevel.ToString().ToUpperInvariant();
+			switch (logLevel)
+			{
+				case LogLevel.Information:
+				case LogLevel.Warning:
+				case LogLevel.Critical:
+				{
+					level = level.Substring(0, 4);
+				} break;
+			}
+			
 			string logBody = formatter(exception);
-			string log = $"[{level}][{nameof(TState)}] {logBody}";
+			string log = $"[{level}][{typeof(TState).Name}] {logBody}";
 			switch (logLevel)
 			{
 				case LogLevel.None:

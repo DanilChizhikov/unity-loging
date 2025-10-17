@@ -36,17 +36,26 @@ namespace DTech.Logging
 		public static void Log<TState>(this ILogger logger, LogLevel logLevel, Exception exception, string message, params object[] args)
 		{
 			logger.ThrowIfNull();
-			if (logger.IsEnabled(logLevel))
-			{
-				return;
-			}
+			logger.Log<TState>(logLevel, exception, Formatter);
 
 			string Formatter(Exception ex)
 			{
-				return string.Format(message, args);
+				bool hasException = ex != null;
+				int lenght = hasException ? args.Length + 1 : args.Length;
+				object[] param = new object[lenght];
+				if (hasException)
+				{
+					param[0] = ex.ToString();
+				}
+				
+				for (int i = 0; i < args.Length; i++)
+				{
+					int paramIndex = hasException ? i + 1 : i;
+					param[paramIndex] = args[i];
+				}
+				
+				return string.Format(message, param);
 			}
-
-			logger.Log<TState>(logLevel, exception, Formatter);
 		}
 
 		/// <summary>
@@ -60,17 +69,8 @@ namespace DTech.Logging
 		public static void Log<TState>(this ILogger logger, LogLevel logLevel, string message, params object[] args)
 		{
 			logger.ThrowIfNull();
-			if (logger.IsEnabled(logLevel))
-			{
-				return;
-			}
-
-			string Formatter(Exception ex)
-			{
-				return string.Format(message, args);
-			}
-
 			logger.Log<TState>(logLevel, null, Formatter);
+			string Formatter(Exception ex) => string.Format(message, args);
 		}
 
 		/// <summary>Formats and writes a critical log message.</summary>
@@ -83,11 +83,6 @@ namespace DTech.Logging
 		public static void LogCritical<TState>(this ILogger logger, Exception exception, string message, params object[] args)
 		{
 			logger.ThrowIfNull();
-			if (logger.IsEnabled(LogLevel.Critical))
-			{
-				return;
-			}
-
 			logger.Log<TState>(LogLevel.Critical, exception, message, args);
 		}
 
@@ -100,11 +95,6 @@ namespace DTech.Logging
 		public static void LogCritical<TState>(this ILogger logger, string message, params object[] args)
 		{
 			logger.ThrowIfNull();
-			if (logger.IsEnabled(LogLevel.Critical))
-			{
-				return;
-			}
-
 			logger.Log<TState>(LogLevel.Critical, message, args);
 		}
 
@@ -118,11 +108,6 @@ namespace DTech.Logging
 		public static void LogDebug<TState>(this ILogger logger, Exception exception, string message, params object[] args)
 		{
 			logger.ThrowIfNull();
-			if (logger.IsEnabled(LogLevel.Debug))
-			{
-				return;
-			}
-
 			logger.Log<TState>(LogLevel.Debug, exception, message, args);
 		}
 
@@ -135,11 +120,6 @@ namespace DTech.Logging
 		public static void LogDebug<TState>(this ILogger logger, string message, params object[] args)
 		{
 			logger.ThrowIfNull();
-			if (logger.IsEnabled(LogLevel.Debug))
-			{
-				return;
-			}
-
 			logger.Log<TState>(LogLevel.Debug, message, args);
 		}
 
@@ -153,11 +133,6 @@ namespace DTech.Logging
 		public static void LogError<TState>(this ILogger logger, Exception exception, string message, params object[] args)
 		{
 			logger.ThrowIfNull();
-			if (logger.IsEnabled(LogLevel.Error))
-			{
-				return;
-			}
-
 			logger.Log<TState>(LogLevel.Error, exception, message, args);
 		}
 
@@ -170,11 +145,6 @@ namespace DTech.Logging
 		public static void LogError<TState>(this ILogger logger, string message, params object[] args)
 		{
 			logger.ThrowIfNull();
-			if (logger.IsEnabled(LogLevel.Error))
-			{
-				return;
-			}
-
 			logger.Log<TState>(LogLevel.Error, message, args);
 		}
 
@@ -188,11 +158,6 @@ namespace DTech.Logging
 		public static void LogInfo<TState>(this ILogger logger, Exception exception, string message, params object[] args)
 		{
 			logger.ThrowIfNull();
-			if (logger.IsEnabled(LogLevel.Information))
-			{
-				return;
-			}
-
 			logger.Log<TState>(LogLevel.Information, exception, message, args);
 		}
 
@@ -205,11 +170,6 @@ namespace DTech.Logging
 		public static void LogInfo<TState>(this ILogger logger, string message, params object[] args)
 		{
 			logger.ThrowIfNull();
-			if (logger.IsEnabled(LogLevel.Information))
-			{
-				return;
-			}
-
 			logger.Log<TState>(LogLevel.Information, message, args);
 		}
 
@@ -224,11 +184,6 @@ namespace DTech.Logging
 			params object[] args)
 		{
 			logger.ThrowIfNull();
-			if (logger.IsEnabled(LogLevel.Trace))
-			{
-				return;
-			}
-
 			logger.Log<TState>(LogLevel.Trace, exception, message, args);
 		}
 
@@ -241,11 +196,6 @@ namespace DTech.Logging
 		public static void LogTrace<TState>(this ILogger logger, string message, params object[] args)
 		{
 			logger.ThrowIfNull();
-			if (logger.IsEnabled(LogLevel.Trace))
-			{
-				return;
-			}
-
 			logger.Log<TState>(LogLevel.Trace, message, args);
 		}
 
@@ -259,11 +209,6 @@ namespace DTech.Logging
 		public static void LogWarning<TState>(this ILogger logger, Exception exception, string message, params object[] args)
 		{
 			logger.ThrowIfNull();
-			if (logger.IsEnabled(LogLevel.Warning))
-			{
-				return;
-			}
-
 			logger.Log<TState>(LogLevel.Warning, exception, message, args);
 		}
 
@@ -276,11 +221,6 @@ namespace DTech.Logging
 		public static void LogWarning<TState>(this ILogger logger, string message, params object[] args)
 		{
 			logger.ThrowIfNull();
-			if (logger.IsEnabled(LogLevel.Warning))
-			{
-				return;
-			}
-
 			logger.Log<TState>(LogLevel.Warning, message, args);
 		}
 

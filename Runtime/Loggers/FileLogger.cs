@@ -56,8 +56,18 @@ namespace DTech.Logging
 		public override void Log<TState>(LogLevel logLevel, Exception exception, Func<Exception, string> formatter)
 		{
 			using var stream = new StreamWriter(LoggerFileProvider.CurrentLogFilePath);
-			string level = logLevel.ToString().Substring(0, 4);
-			stream.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}][{level}] [{nameof(TState)}] {formatter(exception)}");
+			string level = logLevel.ToString().ToUpperInvariant();
+			switch (logLevel)
+			{
+				case LogLevel.Information:
+				case LogLevel.Warning:
+				case LogLevel.Critical:
+				{
+					level = level.Substring(0, 4);
+				} break;
+			}
+			
+			stream.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}][{level}] [{typeof(TState).Name}] {formatter(exception)}");
 		}
 		
 		private sealed class Scope : IDisposable
