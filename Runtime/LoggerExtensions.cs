@@ -224,7 +224,7 @@ namespace DTech.Logging
 			logger.Log<TState>(LogLevel.Warning, message, args);
 		}
 
-		private static void ThrowIfNull(this ILogger logger)
+		internal static void ThrowIfNull(this ILogger logger)
 		{
 			if (logger == null)
 			{

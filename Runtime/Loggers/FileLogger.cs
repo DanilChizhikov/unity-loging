@@ -55,7 +55,7 @@ namespace DTech.Logging
 
 		public override void Log<TState>(LogLevel logLevel, Exception exception, Func<Exception, string> formatter)
 		{
-			using var stream = new StreamWriter(LoggerFileProvider.CurrentLogFilePath);
+			using var stream = new StreamWriter(LoggerFileProvider.CurrentLogFilePath, true);
 			string level = logLevel.ToString().ToUpperInvariant();
 			switch (logLevel)
 			{
@@ -82,14 +82,14 @@ namespace DTech.Logging
 				}
 				
 				_state = state;
-				using var steam = new StreamWriter(LoggerFileProvider.CurrentLogFilePath);
-				steam.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}][Scope Begin] {_state}");
+				using var stream = new StreamWriter(LoggerFileProvider.CurrentLogFilePath, true);
+				stream.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}][Scope Begin] {_state}");
 			}
 			
 			public void Dispose()
 			{
-				using var steam = new StreamWriter(LoggerFileProvider.CurrentLogFilePath);
-				steam.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}][Scope End] {_state}");
+				using var stream = new StreamWriter(LoggerFileProvider.CurrentLogFilePath, true);
+				stream.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}][Scope End] {_state}");
 			}
 		}
 	}
