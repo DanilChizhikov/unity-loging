@@ -6,30 +6,19 @@ using UnityEngine;
 namespace DTech.Logging.Editor
 {
 	[InitializeOnLoad]
-	internal static class UnityLogWriter
+	internal static class UnityEditorLogWriter
 	{
-		private const string LogsFolder = "Logs";
-		private const string LogFilePrefix = "game_log_";
-		private const string LogFileExtension = ".log";
-
 		private static readonly bool _isInitialized;
 		private static readonly LoggingHandlerThreadSafe _loggingHandlerThreadSafe;
-		
-		private static string _currentLogFilePath;
 
-		static UnityLogWriter()
+		static UnityEditorLogWriter()
 		{
 			if (_isInitialized)
 			{
 				return;
 			}
-
-			if (!Directory.Exists(LogsFolder))
-			{
-				Directory.CreateDirectory(LogsFolder);
-			}
 			
-			RefreshLogPath();
+			LoggerFileProvider.RefreshLogPath();
 			
 			_loggingHandlerThreadSafe = new LoggingHandlerThreadSafe();
 			_loggingHandlerThreadSafe.OnLogMessageReceivedThreaded += LogMessageReceivedThreadedHandler;
@@ -39,18 +28,11 @@ namespace DTech.Logging.Editor
 			_isInitialized = true;
 		}
 
-		private static void RefreshLogPath()
-		{
-			string today = DateTime.Now.ToString("yyyy_MM_dd_hh_mm_ss");
-			string path = Path.Combine(LogsFolder, $"{LogFilePrefix}{today}{LogFileExtension}");
-			_currentLogFilePath = path;
-		}
-
 		private static void WriteLog(string level, string condition, string stackTrace)
 		{
 			try
 			{
-				using var writer = new StreamWriter(_currentLogFilePath, true)
+				using var writer = new StreamWriter(LoggerFileProvider.CurrentLogFilePath, true)
 				{
 					AutoFlush = true,
 				};
@@ -68,7 +50,7 @@ namespace DTech.Logging.Editor
 		{
 			if (state == PlayModeStateChange.EnteredEditMode)
 			{
-				RefreshLogPath();
+				LoggerFileProvider.RefreshLogPath();
 			}
 		}
 
