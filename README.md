@@ -9,10 +9,8 @@
 - [Features](#features)
 - [Usage](#usage)
     - [Basic Logging](#basic-logging)
-    - [String Formatting](#string-formatting)
-    - [Exception Handling](#exception-handling)
-    - [Log Priority](#log-priority)
-    - [Custom Log Tags](#custom-log-tags)
+    - [Log Levels](#log-levels)
+    - [Scopes](#scopes)
 - [API Reference](#api-reference)
 - [License](#license)
 
@@ -34,20 +32,18 @@
     ```
 3. Unity will automatically import the package.
 
-If you want to set a target version, Logging uses the `v*.*.*` release tag so you can specify a version like #v0.2.0.
+If you want to set a target version, Logging uses the `v*.*.*` release tag so you can specify a version like #v0.3.0.
 
-For example `https://github.com/DanilChizhikov/unity-loging.git#v0.1.0`.
+For example `https://github.com/DanilChizhikov/unity-loging.git#v0.3.0`.
 
 ## Features
-- Multiple log levels (Info, Warning, Error, Exception)
-- Color-coded log messages for better readability
-- String formatting support
-- Exception handling with stack traces
-- Easy integration with Unity's console
-- Write logs to file for editor mode
-- Thread-safe logging
-- Log priority system for filtering
-- Custom log tags for better organization
+- Multiple log levels (Trace, Debug, Information, Warning, Error, Critical)
+- Structured logging with named parameters
+- Scoped logging for grouping related operations
+- Exception logging with stack traces
+- Thread-safe implementation
+- Extensible logging pipeline
+- Compatible with Microsoft.Extensions.Logging patterns
 
 ## Usage
 
@@ -57,77 +53,62 @@ using DTech.Logging;
 
 public class Example : MonoBehaviour
 {
-    private ILogService _logService = new LogService();
-    
     private ILogger _logger;
     
     private void Start()
     {
-        _logger = _logService.GetLogger("Example");
+        _logger = new Logger();
         
         // Basic logging
-        _logger.Info("This is an info message");
-        _logger.Warning("This is a warning message");
-        _logger.Error("This is an error message");
+        _logger.LogInfo<Example>("This is an info message");
+        _logger.LogWarning<Example>("This is a warning message");
+        _logger.LogError<Example>("This is an error message");
     }
 }
 ```
 
-### String Formatting
 ```csharp
-// String formatting
-_logger.InfoFormat("Player {0} has {1} points", playerName, score);
-_logger.WarningFormat("Low health: {0}%", healthPercent);
-_logger.ErrorFormat("Failed to load {0} at {1}", assetName, assetPath);
-```
+using DTech.Logging;
 
-### Exception Handling
-```csharp
-try
+public class Example : MonoBehaviour
 {
-    // Code that might throw an exception
-}
-catch (Exception ex)
-{
-    // Log exception with stack trace
-    _logger.Exception(ex);
+    private ILoggerT<Example> _logger;
     
-    // For critical exceptions that should stop execution
-    // _logger.ExceptionFatal(ex);
+    private void Start()
+    {
+        _logger = new LoggerT<Example>();
+        
+        // Basic logging
+        _logger.LogInfo("This is an info message");
+        _logger.LogWarning("This is a warning message");
+        _logger.LogError("This is an error message");
+    }
 }
 ```
 
-### Log Priority
-
->!TIP
-> Log priority is used to to determine which logs should not be merged into the release build.
-
-- `Default` - Will not be merged into the release build
-- `Critical` - Will be merged into the release build
-
+### Log Levels
 ```csharp
-// Log with specific priority
-_logger.Log("Important message", LogPriority.Default);
-_logger.Log("Debug message", LogPriority.Critical);
+// Different log levels
+_logger.LogTrace("Detailed debug information");
+_logger.LogDebug("Debug information");
+_logger.LogInfo("Informational message");
+_logger.LogWarning("Warning message");
+_logger.LogError("Error message");
+_logger.LogCritical("Critical error - application may terminate");
 ```
 
-### Custom Log Tags
-
+### Scopes
 ```csharp
-// Log with custom tag
-_logger.Log("Important message", "CustomTag1", "CustomTag2);
+// Using scopes for grouping related operations
+using (_logger.BeginScope("OperationScope"))
+{
+    _logger.LogInfo("Starting operation");
+    
+    // Perform some operations
+    
+    _logger.LogInfo("Operation completed");
+}
 ```
-
-## API Reference
-
-- `void Info(object message, LogPriority priority, params string[] tags)` - Logs an informational message
-- `void InfoFormat(string template, LogPriority priority, params object[] args)` - Logs a formatted info message
-- `void Warning(object message, LogPriority priority, params string[] tags)` - Logs a warning message
-- `void WarningFormat(string template, LogPriority priority, params object[] args)` - Logs a formatted warning message
-- `void Error(object message, LogPriority priority, params string[] tags)` - Logs an error message
-- `void ErrorFormat(string template, LogPriority priority, params object[] args)` - Logs a formatted error message
-- `void Exception(Exception exception, LogPriority priority, params string[] tags)` - Logs an exception with stack trace
-- `void ExceptionFatal(Exception exception, LogPriority priority, params string[] tags)` - Logs a fatal exception and stops execution
 
 ## License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
