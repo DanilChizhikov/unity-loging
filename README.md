@@ -11,6 +11,7 @@
     - [Basic Logging](#basic-logging)
     - [Log Levels](#log-levels)
     - [Scopes](#scopes)
+    - [Defanies](#defanies)
 - [API Reference](#api-reference)
 - [License](#license)
 
@@ -109,6 +110,9 @@ using (_logger.BeginScope("OperationScope"))
     _logger.LogInfo("Operation completed");
 }
 ```
+
+### Defanies
+- ``DISABLE_FILE_LOGGING`` - Disable file logging on build.
 
 ## License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
