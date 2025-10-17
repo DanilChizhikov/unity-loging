@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace DTech.Logging
 {
-	internal sealed class Logger : ILogger
+	internal sealed class LegacyLogger
 	{
 		private const string White = "white";
 		private const string Yellow = "yellow";
@@ -14,7 +14,7 @@ namespace DTech.Logging
 		private readonly string _name;
 		private readonly StringBuilder _logBuilder;
 		
-		public Logger(string name)
+		public LegacyLogger(string name)
 		{
 			_name = name;
 			_logBuilder = new StringBuilder();
