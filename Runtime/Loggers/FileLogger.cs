@@ -6,9 +6,13 @@ namespace DTech.Logging
 {
 	internal sealed class FileLogger : InternalLoggerBase
 	{
+		public FileLogger(string tag) : base(tag)
+		{
+		}
+
 		public override IDisposable BeginScope(string state)
 		{
-			return new Scope(state);
+			return new Scope(Tag, state);
 		}
 
 		public override bool IsEnabled(LogLevel logLevel)
@@ -66,30 +70,54 @@ namespace DTech.Logging
 					level = level.Substring(0, 4);
 				} break;
 			}
-			
-			stream.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}][{level}] [{typeof(TState).Name}] {formatter(exception)}");
+
+			string stateName = typeof(TState).Name;
+			bool isNullState = stateName == NullStateName;
+			if (string.IsNullOrEmpty(Tag))
+			{
+				if (isNullState)
+				{
+					stream.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}][{level}] {formatter(exception)}");
+				}
+				else
+				{
+					stream.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}][{level}][{stateName}] {formatter(exception)}");	
+				}
+			}
+			else
+			{
+				if (isNullState)
+				{
+					stream.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}][{level}][{Tag}] {formatter(exception)}");
+				}
+				else
+				{
+					stream.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}][{level}][{Tag}][{stateName}] {formatter(exception)}");
+				}
+			}
 		}
 		
-		private sealed class Scope : IDisposable
+		private sealed class Scope : InternalLogScopeBase
 		{
-			private readonly string _state;
-
-			public Scope(string state)
+			public Scope(string tag, string blockName) : base(tag, blockName)
 			{
-				if (string.IsNullOrEmpty(state))
-				{
-					throw new ArgumentNullException(nameof(state));
-				}
-				
-				_state = state;
-				using var stream = new StreamWriter(LoggerFileProvider.CurrentLogFilePath, true);
-				stream.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}][Scope Begin] {_state}");
+			}
+
+			protected override void BeginScope(string message)
+			{
+				using StreamWriter writer = GetWriter();
+				writer.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}]{message}");
+			}
+
+			protected override void EndScope(string message)
+			{
+				using StreamWriter writer = GetWriter();
+				writer.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}]{message}");
 			}
 			
-			public void Dispose()
+			private StreamWriter GetWriter()
 			{
-				using var stream = new StreamWriter(LoggerFileProvider.CurrentLogFilePath, true);
-				stream.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}][Scope End] {_state}");
+				return new StreamWriter(LoggerFileProvider.CurrentLogFilePath, true);
 			}
 		}
 	}

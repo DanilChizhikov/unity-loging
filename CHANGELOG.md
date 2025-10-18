@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.3.0] - 2025-10-18
+
+### Changed
+- **Logging**
+    - Updated log system
+    - Mark ``ILoggerT`` and ``LoggerT`` as ``Obsolete``
+    - Update Internal Log Scopes
+
+### Added
+- **Logging**
+    - Added ``ILogger<TCategoryName>`` and ``Logger<TCategoryName>``
+    - Added new Extension methods for ``ILogger``
+
 ## [0.3.0] - 2025-10-17
 
 ### Changed

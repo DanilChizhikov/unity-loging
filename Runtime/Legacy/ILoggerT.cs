@@ -2,6 +2,7 @@ using System;
 
 namespace DTech.Logging
 {
+	[Obsolete("Use ILogger<TCategoryName> instead.")]
 	public interface ILoggerT<T> : ILogger
 	{
 		/// <summary>Begins a logical operation scope.</summary>

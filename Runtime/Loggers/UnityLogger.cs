@@ -5,9 +5,13 @@ namespace DTech.Logging
 {
 	internal sealed class UnityLogger : InternalLoggerBase
 	{
+		public UnityLogger(string tag) : base(tag)
+		{
+		}
+
 		public override IDisposable BeginScope(string state)
 		{
-			return new Scope(state);
+			return new Scope(Tag, state);
 		}
 
 		public override bool IsEnabled(LogLevel logLevel)
@@ -57,7 +61,32 @@ namespace DTech.Logging
 			}
 			
 			string logBody = formatter(exception);
-			string log = $"[{level}][{typeof(TState).Name}] {logBody}";
+			string stateName = typeof(TState).Name;
+			bool isNullState = stateName == NullStateName;
+			string log;
+			if (string.IsNullOrEmpty(Tag))
+			{
+				if (isNullState)
+				{
+					log = $"[{level}] {logBody}";
+				}
+				else
+				{
+					log = $"[{level}][{stateName}] {logBody}";
+				}
+			}
+			else
+			{
+				if (isNullState)
+				{
+					log = $"[{level}][{Tag}] {logBody}";
+				}
+				else
+				{
+					log = $"[{level}][{Tag}][{stateName}] {logBody}";
+				}
+			}
+			
 			switch (logLevel)
 			{
 				case LogLevel.None:
@@ -86,24 +115,20 @@ namespace DTech.Logging
 			}
 		}
 		
-		private sealed class Scope : IDisposable
+		private sealed class Scope : InternalLogScopeBase
 		{
-			private readonly string _state;
-
-			public Scope(string state)
+			public Scope(string tag, string blockName) : base(tag, blockName)
 			{
-				if (string.IsNullOrEmpty(state))
-				{
-					throw new ArgumentNullException(nameof(state));
-				}
-				
-				_state = state;
-				Debug.Log($"[Scope Begin] {state}");
 			}
-			
-			public void Dispose()
+
+			protected override void BeginScope(string message)
 			{
-				Debug.Log($"[Scope End] {_state}");
+				Debug.Log(message);
+			}
+
+			protected override void EndScope(string message)
+			{
+				Debug.Log(message);
 			}
 		}
 	}

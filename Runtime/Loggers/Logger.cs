@@ -4,11 +4,16 @@ namespace DTech.Logging
 {
 	public sealed class Logger : ILogger
 	{
-		private static readonly InternalLoggerBase[] _loggers = new InternalLoggerBase[]
+		private readonly InternalLoggerBase[] _loggers;
+
+		public Logger(string tag)
 		{
-			new UnityLogger(),
-			new FileLogger()
-		};
+			_loggers = new InternalLoggerBase[]
+			{
+				new UnityLogger(tag),
+				new FileLogger(tag)
+			};
+		}
 
 		public IDisposable BeginScope<TState>()
 		{
@@ -56,6 +61,36 @@ namespace DTech.Logging
 					logger.Log<TState>(logLevel, exception, formatter);
 				}
 			}
+		}
+	}
+
+	public sealed class Logger<TCategoryName> : ILogger<TCategoryName>
+	{
+		private readonly ILogger _logger;
+		
+		public Logger()
+		{
+			_logger = new Logger(typeof(TCategoryName).Name);
+		}
+		
+		public IDisposable BeginScope<TState>()
+		{
+			return _logger.BeginScope<TState>();
+		}
+
+		public IDisposable BeginScope(string state)
+		{
+			return _logger.BeginScope(state);
+		}
+
+		public bool IsEnabled(LogLevel logLevel)
+		{
+			return _logger.IsEnabled(logLevel);
+		}
+
+		public void Log<TState>(LogLevel logLevel, Exception exception, Func<Exception, string> formatter)
+		{
+			_logger.Log<TState>(logLevel, exception, formatter);
 		}
 	}
 }

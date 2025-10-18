@@ -11,7 +11,6 @@
     - [Basic Logging](#basic-logging)
     - [Log Levels](#log-levels)
     - [Scopes](#scopes)
-    - [Defanies](#defanies)
 - [API Reference](#api-reference)
 - [License](#license)
 
@@ -33,9 +32,9 @@
     ```
 3. Unity will automatically import the package.
 
-If you want to set a target version, Logging uses the `v*.*.*` release tag so you can specify a version like #v0.3.0.
+If you want to set a target version, Logging uses the `v*.*.*` release tag so you can specify a version like #v0.3.1.
 
-For example `https://github.com/DanilChizhikov/unity-loging.git#v0.3.0`.
+For example `https://github.com/DanilChizhikov/unity-loging.git#v0.3.1`.
 
 ## Features
 - Multiple log levels (Trace, Debug, Information, Warning, Error, Critical)
@@ -58,12 +57,12 @@ public class Example : MonoBehaviour
     
     private void Start()
     {
-        _logger = new Logger();
+        _logger = new Logger(nameof(Example));
         
         // Basic logging
-        _logger.LogInfo<Example>("This is an info message");
-        _logger.LogWarning<Example>("This is a warning message");
-        _logger.LogError<Example>("This is an error message");
+        _logger.LogInfo("This is an info message");
+        _logger.LogWarning("This is a warning message");
+        _logger.LogError("This is an error message");
     }
 }
 ```
@@ -73,11 +72,11 @@ using DTech.Logging;
 
 public class Example : MonoBehaviour
 {
-    private ILoggerT<Example> _logger;
+    private ILogger<Example> _logger;
     
     private void Start()
     {
-        _logger = new LoggerT<Example>();
+        _logger = new Logger<Example>();
         
         // Basic logging
         _logger.LogInfo("This is an info message");
@@ -110,9 +109,6 @@ using (_logger.BeginScope("OperationScope"))
     _logger.LogInfo("Operation completed");
 }
 ```
-
-### Defanies
-- ``DISABLE_FILE_LOGGING`` - Disable file logging on build.
 
 ## License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
