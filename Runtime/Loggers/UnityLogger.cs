@@ -11,7 +11,7 @@ namespace DTech.Logging
 
 		public override IDisposable BeginScope(string state)
 		{
-			return new Scope(state);
+			return new Scope(Tag, state);
 		}
 
 		public override bool IsEnabled(LogLevel logLevel)
@@ -115,24 +115,20 @@ namespace DTech.Logging
 			}
 		}
 		
-		private sealed class Scope : IDisposable
+		private sealed class Scope : InternalLogScopeBase
 		{
-			private readonly string _state;
-
-			public Scope(string state)
+			public Scope(string tag, string blockName) : base(tag, blockName)
 			{
-				if (string.IsNullOrEmpty(state))
-				{
-					throw new ArgumentNullException(nameof(state));
-				}
-				
-				_state = state;
-				Debug.Log($"[Scope Begin] {state}");
 			}
-			
-			public void Dispose()
+
+			protected override void BeginScope(string message)
 			{
-				Debug.Log($"[Scope End] {_state}");
+				Debug.Log(message);
+			}
+
+			protected override void EndScope(string message)
+			{
+				Debug.Log(message);
 			}
 		}
 	}
