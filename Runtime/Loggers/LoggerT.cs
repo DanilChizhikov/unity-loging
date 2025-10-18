@@ -2,18 +2,18 @@ using System;
 
 namespace DTech.Logging
 {
-	public sealed class LoggerT<T> : ILoggerT<T>
+	public sealed class LoggerT<TCategoryName> : ILoggerT<TCategoryName>
 	{
 		private readonly Logger _logger;
 
 		public LoggerT()
 		{
-			_logger = new Logger();
+			_logger = new Logger(typeof(TCategoryName).Name);
 		}
 		
 		public IDisposable BeginScope()
 		{
-			return BeginScope<T>();
+			return BeginScope<TCategoryName>();
 		}
 		
 		public IDisposable BeginScope<TState>()
@@ -33,37 +33,37 @@ namespace DTech.Logging
 		
 		public void Log(LogLevel logLevel, Exception exception, Func<Exception, string> formatter)
 		{
-			Log<T>(logLevel, exception, formatter);
+			Log<TCategoryName>(logLevel, exception, formatter);
 		}
 
 		public void LogInfo(string message, params object[] args)
 		{
-			_logger.LogInfo<T>(message, args);
+			_logger.LogInfo<TCategoryName>(message, args);
 		}
 
 		public void LogDebug(string message, params object[] args)
 		{
-			_logger.LogDebug<T>(message, args);
+			_logger.LogDebug<TCategoryName>(message, args);
 		}
 
 		public void LogWarning(string message, params object[] args)
 		{
-			_logger.LogWarning<T>(message, args);
+			_logger.LogWarning<TCategoryName>(message, args);
 		}
 
 		public void LogTrace(string message, params object[] args)
 		{
-			_logger.LogTrace<T>(message, args);
+			_logger.LogTrace<TCategoryName>(message, args);
 		}
 
 		public void LogError(string message, params object[] args)
 		{
-			_logger.LogError<T>(message, args);
+			_logger.LogError<TCategoryName>(message, args);
 		}
 
 		public void LogCritical(string message, params object[] args)
 		{
-			_logger.LogCritical<T>(message, args);
+			_logger.LogCritical<TCategoryName>(message, args);
 		}
 
 		public void Log<TState>(LogLevel logLevel, Exception exception, Func<Exception, string> formatter)

@@ -6,6 +6,6 @@ namespace DTech.Logging
 	public sealed class LogService : ILogService
 	{
 		[Obsolete("Use ILogger instead.")]
-		public ILogger GetLogger(string name) => new Logger();
+		public ILogger GetLogger(string name) => new Logger(name);
 	}
 }

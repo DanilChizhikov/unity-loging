@@ -5,6 +5,10 @@ namespace DTech.Logging
 {
 	internal sealed class UnityLogger : InternalLoggerBase
 	{
+		public UnityLogger(string tag) : base(tag)
+		{
+		}
+
 		public override IDisposable BeginScope(string state)
 		{
 			return new Scope(state);
@@ -57,7 +61,10 @@ namespace DTech.Logging
 			}
 			
 			string logBody = formatter(exception);
-			string log = $"[{level}][{typeof(TState).Name}] {logBody}";
+			string log = string.IsNullOrEmpty(Tag)
+				? $"[{level}][{typeof(TState).Name}] {logBody}"
+				: $"[{level}] [{Tag}] [{typeof(TState).Name}] {logBody}";
+			
 			switch (logLevel)
 			{
 				case LogLevel.None:

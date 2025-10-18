@@ -4,11 +4,16 @@ namespace DTech.Logging
 {
 	public sealed class Logger : ILogger
 	{
-		private static readonly InternalLoggerBase[] _loggers = new InternalLoggerBase[]
+		private readonly InternalLoggerBase[] _loggers;
+
+		public Logger(string tag)
 		{
-			new UnityLogger(),
-			new FileLogger()
-		};
+			_loggers = new InternalLoggerBase[]
+			{
+				new UnityLogger(tag),
+				new FileLogger(tag)
+			};
+		}
 
 		public IDisposable BeginScope<TState>()
 		{

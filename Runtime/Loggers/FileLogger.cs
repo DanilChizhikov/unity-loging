@@ -6,6 +6,10 @@ namespace DTech.Logging
 {
 	internal sealed class FileLogger : InternalLoggerBase
 	{
+		public FileLogger(string tag) : base(tag)
+		{
+		}
+
 		public override IDisposable BeginScope(string state)
 		{
 			return new Scope(state);
@@ -66,8 +70,15 @@ namespace DTech.Logging
 					level = level.Substring(0, 4);
 				} break;
 			}
-			
-			stream.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}][{level}] [{typeof(TState).Name}] {formatter(exception)}");
+
+			if (string.IsNullOrEmpty(Tag))
+			{
+				stream.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}][{level}] [{typeof(TState).Name}] {formatter(exception)}");	
+			}
+			else
+			{
+				stream.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}][{level}] [{Tag}] [{typeof(TState).Name}] {formatter(exception)}");
+			}
 		}
 		
 		private sealed class Scope : IDisposable

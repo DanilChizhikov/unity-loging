@@ -4,6 +4,13 @@ namespace DTech.Logging
 {
 	internal abstract class InternalLoggerBase : ILogger
 	{
+		protected string Tag { get; }
+
+		public InternalLoggerBase(string tag)
+		{
+			Tag = tag;
+		}
+		
 		public IDisposable BeginScope<TState>()
 		{
 			return BeginScope(nameof(TState));
