@@ -5,6 +5,7 @@ namespace DTech.Logging
 	internal abstract class InternalLoggerBase : ILogger
 	{
 		protected string Tag { get; }
+		protected string NullStateName => nameof(NullState);
 
 		public InternalLoggerBase(string tag)
 		{

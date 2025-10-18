@@ -71,13 +71,29 @@ namespace DTech.Logging
 				} break;
 			}
 
+			string stateName = typeof(TState).Name;
+			bool isNullState = stateName == NullStateName;
 			if (string.IsNullOrEmpty(Tag))
 			{
-				stream.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}][{level}] [{typeof(TState).Name}] {formatter(exception)}");	
+				if (isNullState)
+				{
+					stream.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}][{level}] {formatter(exception)}");
+				}
+				else
+				{
+					stream.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}][{level}][{stateName}] {formatter(exception)}");	
+				}
 			}
 			else
 			{
-				stream.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}][{level}] [{Tag}] [{typeof(TState).Name}] {formatter(exception)}");
+				if (isNullState)
+				{
+					stream.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}][{level}][{Tag}] {formatter(exception)}");
+				}
+				else
+				{
+					stream.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}][{level}][{Tag}][{stateName}] {formatter(exception)}");
+				}
 			}
 		}
 		

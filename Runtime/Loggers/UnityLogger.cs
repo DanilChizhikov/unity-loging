@@ -61,9 +61,31 @@ namespace DTech.Logging
 			}
 			
 			string logBody = formatter(exception);
-			string log = string.IsNullOrEmpty(Tag)
-				? $"[{level}][{typeof(TState).Name}] {logBody}"
-				: $"[{level}] [{Tag}] [{typeof(TState).Name}] {logBody}";
+			string stateName = typeof(TState).Name;
+			bool isNullState = stateName == NullStateName;
+			string log;
+			if (string.IsNullOrEmpty(Tag))
+			{
+				if (isNullState)
+				{
+					log = $"[{level}] {logBody}";
+				}
+				else
+				{
+					log = $"[{level}][{stateName}] {logBody}";
+				}
+			}
+			else
+			{
+				if (isNullState)
+				{
+					log = $"[{level}][{Tag}] {logBody}";
+				}
+				else
+				{
+					log = $"[{level}][{Tag}][{stateName}] {logBody}";
+				}
+			}
 			
 			switch (logLevel)
 			{
