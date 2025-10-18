@@ -27,6 +27,7 @@ namespace DTech.Logging
 			}
 		}
 
+		[Obsolete("Use ILogger instead.")]
 		public static void Info(this ILogger logger, object message, LogPriority priority = LogPriority.Default, params string[] tags)
 		{
 			logger.ThrowIfNull();
@@ -37,6 +38,7 @@ namespace DTech.Logging
 			}
 		}
 		
+		[Obsolete("Use ILogger instead.")]
 		public static void InfoFormat(this ILogger logger, string template, LogPriority priority = LogPriority.Default, params object[] args)
 		{
 			if (priority.IsAvailableToSend())
@@ -46,6 +48,7 @@ namespace DTech.Logging
 			}
 		}
 		
+		[Obsolete("Use ILogger instead.")]
 		public static void Warning(this ILogger logger, object message, LogPriority priority = LogPriority.Default, params string[] tags)
 		{
 			logger.ThrowIfNull();
@@ -56,6 +59,7 @@ namespace DTech.Logging
 			}
 		}
 		
+		[Obsolete("Use ILogger instead.")]
 		public static void WarningFormat(this ILogger logger, string template, LogPriority priority = LogPriority.Default, params object[] args)
 		{
 			if (priority.IsAvailableToSend())
@@ -65,6 +69,7 @@ namespace DTech.Logging
 			}
 		}
 		
+		[Obsolete("Use ILogger instead.")]
 		public static void Error(this ILogger logger, object message, LogPriority priority = LogPriority.Default, params string[] tags)
 		{
 			logger.ThrowIfNull();
@@ -75,6 +80,7 @@ namespace DTech.Logging
 			}
 		}
 		
+		[Obsolete("Use ILogger instead.")]
 		public static void ErrorFormat(this ILogger logger, string template, LogPriority priority = LogPriority.Default, params object[] args)
 		{
 			if (priority.IsAvailableToSend())
@@ -84,6 +90,7 @@ namespace DTech.Logging
 			}
 		}
 		
+		[Obsolete("Use ILogger instead.")]
 		public static void Exception(this ILogger logger, Exception exception, LogPriority priority = LogPriority.Default, params string[] tags)
 		{
 			logger.ThrowIfNull();
@@ -94,6 +101,7 @@ namespace DTech.Logging
 			}
 		}
 		
+		[Obsolete("Use ILogger instead.")]
 		public static void ExceptionFatal(this ILogger logger, Exception exception, LogPriority priority = LogPriority.Default, params string[] tags)
 		{
 			if (priority.IsAvailableToSend())
