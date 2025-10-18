@@ -25,8 +25,12 @@ namespace DTech.Logging
 		/// <summary>Writes a log entry.</summary>
 		/// <param name="logLevel">Entry will be written on this level.</param>
 		/// <param name="exception">The exception related to this entry.</param>
-		/// <param name="formatter">Function to create a <see cref="T:System.String" /> message of the <paramref name="state" /> and <paramref name="exception" />.</param>
+		/// <param name="formatter">Function to create a <see cref="T:System.String" /> message of the <paramref name="exception" />.</param>
 		/// <typeparam name="TState">The type of the object to be written.</typeparam>
 		void Log<TState>(LogLevel logLevel, Exception exception, Func<Exception, string> formatter);
+	}
+
+	public interface ILogger<TCategoryName> : ILogger
+	{
 	}
 }

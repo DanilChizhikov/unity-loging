@@ -2,6 +2,7 @@ using System;
 
 namespace DTech.Logging
 {
+	[Obsolete("Use Logger<TCategoryName> instead.")]
 	public sealed class LoggerT<TCategoryName> : ILoggerT<TCategoryName>
 	{
 		private readonly Logger _logger;
