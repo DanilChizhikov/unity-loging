@@ -23,7 +23,7 @@ namespace DTech.Logging
 			}
 
 			_blockName = blockName;
-			Name = string.IsNullOrEmpty(tag) ? $"[{blockName}]" : $"[{tag}][{blockName}]";
+			Name = string.IsNullOrEmpty(tag) ? $"{blockName}" : $"{tag} > {blockName}";
 			_logger = logger;
 			Parent = parent;
 			_isDisposed = false;
@@ -31,7 +31,7 @@ namespace DTech.Logging
 
 		public void Dispose()
 		{
-			if (!_isDisposed)
+			if (_isDisposed)
 			{
 				return;
 			}

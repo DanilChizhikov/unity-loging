@@ -44,22 +44,22 @@ namespace DTech.Logging
 			{
 				if (isNullState)
 				{
-					stream.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}]{scopes}[{level}] {formatter(exception)}");
+					stream.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}][{level}]{scopes} {formatter(exception)}");
 				}
 				else
 				{
-					stream.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}]{scopes}[{level}][{stateName}] {formatter(exception)}");	
+					stream.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}][{level}]{scopes}[{stateName}] {formatter(exception)}");	
 				}
 			}
 			else
 			{
 				if (isNullState)
 				{
-					stream.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}]{scopes}[{level}][{Tag}] {formatter(exception)}");
+					stream.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}][{level}]{scopes}[{Tag}] {formatter(exception)}");
 				}
 				else
 				{
-					stream.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}]{scopes}[{level}][{Tag}][{stateName}] {formatter(exception)}");
+					stream.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}][{level}]{scopes}[{Tag}][{stateName}] {formatter(exception)}");
 				}
 			}
 		}

@@ -6,6 +6,9 @@ namespace DTech.Logging
 {
 	internal abstract class InternalLoggerBase : ILogger
 	{
+		private const string ScopesSeparator = " > ";
+		private const string ScopeFormat = "[Scope > {0}]";
+		
 		private readonly List<string> _scopes;
 		
 		internal AsyncLocal<LogScope> CurrentScope { get; }
@@ -45,7 +48,13 @@ namespace DTech.Logging
 			}
 			
 			_scopes.Reverse();
-			SendLog<TState>(logLevel, exception, formatter, _scopes.Count > 0 ? string.Join("", _scopes) : string.Empty);
+			string scopes = string.Empty;
+			if (_scopes.Count > 0)
+			{
+				scopes = string.Format(ScopeFormat, string.Join(ScopesSeparator, _scopes));
+			}
+			
+			SendLog<TState>(logLevel, exception, formatter, scopes);
 		}
 
 		protected abstract void SendLog<TState>(LogLevel logLevel, Exception exception, Func<Exception, string> formatter, string scopes);
