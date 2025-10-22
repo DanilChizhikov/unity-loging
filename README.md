@@ -7,6 +7,7 @@
     - [Manual Installation](#manual-installation)
     - [UPM Installation](#upm-installation)
 - [Features](#features)
+- [Settings](#settings)
 - [Usage](#usage)
     - [Basic Logging](#basic-logging)
     - [Log Levels](#log-levels)
@@ -32,9 +33,9 @@
     ```
 3. Unity will automatically import the package.
 
-If you want to set a target version, Logging uses the `v*.*.*` release tag so you can specify a version like #v0.3.1.
+If you want to set a target version, Logging uses the `v*.*.*` release tag so you can specify a version like #v0.3.2.
 
-For example `https://github.com/DanilChizhikov/unity-loging.git#v0.3.1`.
+For example `https://github.com/DanilChizhikov/unity-loging.git#v0.3.2`.
 
 ## Features
 - Multiple log levels (Trace, Debug, Information, Warning, Error, Critical)
@@ -44,6 +45,13 @@ For example `https://github.com/DanilChizhikov/unity-loging.git#v0.3.1`.
 - Thread-safe implementation
 - Extensible logging pipeline
 - Compatible with Microsoft.Extensions.Logging patterns
+
+## Settings
+For control log on release builds, you can use the `LoggerSettings`.
+It is `ScriptableObject` and can be found in `Assets/Resources/LoggerSettings.asset`.
+> [!NOTE]
+> `LoggerSettings` is created automatically on first launch.
+> Or you can create it manually `DTech/Logging/Logger Settings`.
 
 ## Usage
 

@@ -10,11 +10,6 @@ namespace DTech.Logging
 		{
 		}
 
-		public override IDisposable BeginScope(string state)
-		{
-			return new Scope(Tag, state);
-		}
-
 		public override bool IsEnabled(LogLevel logLevel)
 		{
 			if (Application.isEditor)
@@ -22,42 +17,14 @@ namespace DTech.Logging
 				return false;
 			}
 			
-			#if DISABLE_FILE_LOGGING
-			return false;
+			#if DEVELOPMENT_BUILD
+			return logLevel != LogLevel.None;
 			#endif
-			
-			bool result = false;
-			switch (logLevel)
-			{
-				case LogLevel.None:
-				{
-					result = false;
-				} break;
 
-				case LogLevel.Trace:
-				case LogLevel.Debug:
-				{
-					#if DEVELOPMENT_BUILD || UNITY_EDITOR
-					result = true;
-					#endif
-				} break;
-				
-				case LogLevel.Information:
-				case LogLevel.Warning:
-				case LogLevel.Error:
-				case LogLevel.Critical:
-				{
-					result = true;
-				} break;
-
-				default:
-					throw new ArgumentOutOfRangeException(nameof(logLevel), logLevel, null);
-			}
-			
-			return result;
+			return LoggerSettings.Instance.IsEnabled(logLevel);
 		}
 
-		public override void Log<TState>(LogLevel logLevel, Exception exception, Func<Exception, string> formatter)
+		protected override void SendLog<TState>(LogLevel logLevel, Exception exception, Func<Exception, string> formatter, string scopes)
 		{
 			using var stream = new StreamWriter(LoggerFileProvider.CurrentLogFilePath, true);
 			string level = logLevel.ToString().ToUpperInvariant();
@@ -77,47 +44,23 @@ namespace DTech.Logging
 			{
 				if (isNullState)
 				{
-					stream.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}][{level}] {formatter(exception)}");
+					stream.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}][{level}]{scopes} {formatter(exception)}");
 				}
 				else
 				{
-					stream.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}][{level}][{stateName}] {formatter(exception)}");	
+					stream.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}][{level}]{scopes}[{stateName}] {formatter(exception)}");	
 				}
 			}
 			else
 			{
 				if (isNullState)
 				{
-					stream.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}][{level}][{Tag}] {formatter(exception)}");
+					stream.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}][{level}]{scopes}[{Tag}] {formatter(exception)}");
 				}
 				else
 				{
-					stream.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}][{level}][{Tag}][{stateName}] {formatter(exception)}");
+					stream.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}][{level}]{scopes}[{Tag}][{stateName}] {formatter(exception)}");
 				}
-			}
-		}
-		
-		private sealed class Scope : InternalLogScopeBase
-		{
-			public Scope(string tag, string blockName) : base(tag, blockName)
-			{
-			}
-
-			protected override void BeginScope(string message)
-			{
-				using StreamWriter writer = GetWriter();
-				writer.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}]{message}");
-			}
-
-			protected override void EndScope(string message)
-			{
-				using StreamWriter writer = GetWriter();
-				writer.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}]{message}");
-			}
-			
-			private StreamWriter GetWriter()
-			{
-				return new StreamWriter(LoggerFileProvider.CurrentLogFilePath, true);
 			}
 		}
 	}

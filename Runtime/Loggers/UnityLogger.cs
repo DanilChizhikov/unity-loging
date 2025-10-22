@@ -9,45 +9,16 @@ namespace DTech.Logging
 		{
 		}
 
-		public override IDisposable BeginScope(string state)
-		{
-			return new Scope(Tag, state);
-		}
-
 		public override bool IsEnabled(LogLevel logLevel)
 		{
-			bool result = false;
-			switch (logLevel)
-			{
-				case LogLevel.None:
-				{
-					result = false;
-				} break;
+			#if DEVELOPMENT_BUILD || UNITY_EDITOR
+			return logLevel != LogLevel.None;
+			#endif
 
-				case LogLevel.Trace:
-				case LogLevel.Debug:
-				case LogLevel.Information:
-				case LogLevel.Warning:
-				case LogLevel.Error:
-				{
-					#if DEVELOPMENT_BUILD || UNITY_EDITOR
-					result = true;
-					#endif
-				} break;
-				
-				case LogLevel.Critical:
-				{
-					result = true;
-				} break;
-
-				default:
-					throw new ArgumentOutOfRangeException(nameof(logLevel), logLevel, null);
-			}
-			
-			return result;
+			return LoggerSettings.Instance.IsEnabled(logLevel);
 		}
 
-		public override void Log<TState>(LogLevel logLevel, Exception exception, Func<Exception, string> formatter)
+		protected override void SendLog<TState>(LogLevel logLevel, Exception exception, Func<Exception, string> formatter, string scopes)
 		{
 			string level = logLevel.ToString().ToUpperInvariant();
 			switch (logLevel)
@@ -68,22 +39,22 @@ namespace DTech.Logging
 			{
 				if (isNullState)
 				{
-					log = $"[{level}] {logBody}";
+					log = $"[{level}]{scopes} {logBody}";
 				}
 				else
 				{
-					log = $"[{level}][{stateName}] {logBody}";
+					log = $"[{level}]{scopes}[{stateName}] {logBody}";
 				}
 			}
 			else
 			{
 				if (isNullState)
 				{
-					log = $"[{level}][{Tag}] {logBody}";
+					log = $"[{level}]{scopes}[{Tag}] {logBody}";
 				}
 				else
 				{
-					log = $"[{level}][{Tag}][{stateName}] {logBody}";
+					log = $"[{level}]{scopes}[{Tag}][{stateName}] {logBody}";
 				}
 			}
 			
@@ -112,23 +83,6 @@ namespace DTech.Logging
 
 				default:
 					throw new ArgumentOutOfRangeException(nameof(logLevel), logLevel, null);
-			}
-		}
-		
-		private sealed class Scope : InternalLogScopeBase
-		{
-			public Scope(string tag, string blockName) : base(tag, blockName)
-			{
-			}
-
-			protected override void BeginScope(string message)
-			{
-				Debug.Log(message);
-			}
-
-			protected override void EndScope(string message)
-			{
-				Debug.Log(message);
 			}
 		}
 	}

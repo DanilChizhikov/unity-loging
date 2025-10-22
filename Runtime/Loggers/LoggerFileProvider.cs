@@ -5,9 +5,10 @@ namespace DTech.Logging
 {
 	internal static class LoggerFileProvider
 	{
-		private const string LogsFolder = "Logs";
-		private const string LogFilePrefix = "game_log_";
-		private const string LogFileExtension = ".log";
+		public const string LogsFolder = "Logs";
+		public const string LogFilePrefix = "game_log_";
+		public const string LogFileExtension = ".log";
+		public const string DateFormat = "yyyy_MM_dd_hh_mm_ss";
 		
 		private static readonly bool _isInitialized;
 		
@@ -29,7 +30,7 @@ namespace DTech.Logging
 			_isInitialized = true;
 		}
 		
-		internal static void RefreshLogPath()
+		public static void RefreshLogPath()
 		{
 			string today = DateTime.Now.ToString("yyyy_MM_dd_hh_mm_ss");
 			string path = Path.Combine(LogsFolder, $"{LogFilePrefix}{today}{LogFileExtension}");

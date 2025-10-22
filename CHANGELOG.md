@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.3.2] - 2025-10-22
+
+### Added
+- Log Editor Utilities
+  - ``Tools/DTech/Logger/Open Logs Folder``
+  - ``Tools/DTech/Logger/Remove All Logs``
+- ``LoggerSettings`` - settings for control log on release builds
+
+### Changed
+- **Logging**
+  - Updated scope logging
+
+### Fixed
+- **Logging**
+  - Fixed scope logging on ``async`` methods
+
 ## [0.3.0] - 2025-10-18
 
 ### Changed
