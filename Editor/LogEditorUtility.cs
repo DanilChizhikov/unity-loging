@@ -9,7 +9,22 @@ namespace DTech.Logging.Editor
 {
 	internal static class LogEditorUtility
 	{
-		public static string LogFolderPath => Path.Combine(Application.dataPath.Replace("Assets", ""), LoggerFileProvider.LogsFolder);
+		private const string EditorLogWritingSaveKey = "DTech.Logging.Editor.LogWriting.Save";
+		private const string EditorLogWritingMenuPath = "Tools/DTech/Logger/Editor Log Writing Enable";
+		
+		public static bool IsEditorLogWriterEnabled
+		{
+			get => EditorPrefs.GetBool(EditorLogWritingSaveKey, true);
+			private set => EditorPrefs.SetBool(EditorLogWritingSaveKey, value);
+		}
+		
+		private static string LogFolderPath => Path.Combine(Application.dataPath.Replace("Assets", ""), LoggerFileProvider.LogsFolder);
+		
+		[InitializeOnLoadMethod]
+		private static void Initialize()
+		{
+			Menu.SetChecked(EditorLogWritingMenuPath, IsEditorLogWriterEnabled);
+		}
 		
 		[MenuItem("Tools/DTech/Logger/Open Logs Folder")]
 		private static void OpenLogsFolder()
@@ -66,5 +81,11 @@ namespace DTech.Logging.Editor
 			}
 		}
 		
+		[MenuItem(EditorLogWritingMenuPath)]
+		private static void ToggleEditorLogWriting()
+		{
+			IsEditorLogWriterEnabled = !IsEditorLogWriterEnabled;
+			Menu.SetChecked(EditorLogWritingMenuPath, IsEditorLogWriterEnabled);
+		}
 	}
 }
