@@ -56,7 +56,7 @@ namespace DTech.Logging.Editor
 
 		private static void LogMessageReceivedThreadedHandler(string condition, string stackTrace, LogType type)
 		{
-			if (Application.isPlaying)
+			if (Application.isPlaying && LogEditorUtility.IsEditorLogWriterEnabled)
 			{
 				WriteLog(type.ToString(), condition.CleanColorTags(), stackTrace);
 			}
