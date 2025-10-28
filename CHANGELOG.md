@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.3.3] - 2025-10-28
+
+### Added
+- Log Editor Utilities
+  - ``Tools/DTech/Logger/Editor Log Writing Enable`` - switch editor log writing enable
+
 ## [0.3.2] - 2025-10-22
 
 ### Added
