@@ -18,7 +18,7 @@ namespace DTech.Logging.Editor
 			private set => EditorPrefs.SetBool(EditorLogWritingSaveKey, value);
 		}
 		
-		private static string LogFolderPath => Path.Combine(Application.dataPath.Replace("Assets", ""), LoggerFileProvider.LogsFolder);
+		private static string LogFolderPath => Path.Combine(Application.dataPath.Replace("Assets", ""), LoggerFileProvider.LogsFolderName);
 		
 		[InitializeOnLoadMethod]
 		private static void Initialize()
