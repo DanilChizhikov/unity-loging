@@ -21,11 +21,16 @@ namespace DTech.Logging
 			return logLevel != LogLevel.None;
 			#endif
 
-			return LoggerSettings.Instance.IsEnabled(logLevel);
+			return LoggerSettings.Instance.IsFileLoggingEnabled && LoggerSettings.Instance.IsEnabled(logLevel);
 		}
 
 		protected override void SendLog<TState>(LogLevel logLevel, Exception exception, Func<Exception, string> formatter, string scopes)
 		{
+			if (!LoggerSettings.Instance.IsFileLoggingEnabled)
+			{
+				return;
+			}
+			
 			using var stream = new StreamWriter(LoggerFileProvider.CurrentLogFilePath, true);
 			string level = logLevel.ToString().ToUpperInvariant();
 			switch (logLevel)

@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.4.0] - 2025-10-30
+
+### Fixed
+- File logging
+  - Fixed `IOException` from `LoggerFileProvider`
+
+### Changed
+- File logging
+  - Added check `LoggerSettings.IsFileLoggingEnabled` before file logging
+
 ## [0.3.3] - 2025-10-28
 
 ### Added
