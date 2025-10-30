@@ -35,6 +35,8 @@ namespace DTech.Logging
 		[SerializeField] private bool _isFileLoggingEnabled = true;
 		
 		private static LoggerSettings _instance;
+		
+		public bool IsFileLoggingEnabled => _isFileLoggingEnabled;
 
 		public bool IsEnabled(LogLevel logLevel) =>
 			logLevel switch
