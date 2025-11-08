@@ -12,7 +12,7 @@ namespace DTech.Logging
 		private const string LogFileExtension = ".log";
 		private const string DateFormat = "yyyy_MM_dd_HH_mm_ss";
 
-		private static bool _isInitialized;
+		private static readonly bool _isInitialized;
 
 		public static string CurrentLogFilePath { get; private set; }
 
@@ -45,7 +45,15 @@ namespace DTech.Logging
 
 		public static void RefreshLogPath(string basePath = null)
 		{
-			basePath ??= Path.Combine(Application.persistentDataPath, LogsFolderName);
+			if (string.IsNullOrEmpty(basePath))
+			{
+				#if UNITY_EDITOR
+				basePath = LogsFolderName;
+				#else
+				basePath = Path.Combine(Application.persistentDataPath, LogsFolderName);
+				#endif
+			}
+			
 			string today = DateTime.Now.ToString(DateFormat);
 			CurrentLogFilePath = Path.Combine(basePath, $"{LogFilePrefix}{today}{LogFileExtension}");
 		}
