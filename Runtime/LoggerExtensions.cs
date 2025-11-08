@@ -69,7 +69,16 @@ namespace DTech.Logging
 		{
 			logger.ThrowIfNull();
 			logger.Log<TState>(logLevel, null, Formatter);
-			string Formatter(Exception ex) => string.Format(message, args);
+
+			string Formatter(Exception ex)
+			{
+				if (args.Length == 0)
+				{
+					return message;
+				}
+				
+				return string.Format(message, args);
+			}
 		}
 		
 		/// <summary>

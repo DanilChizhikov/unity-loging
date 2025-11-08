@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.5] - 2025-11-08
+
+### Fixed
+- File logging
+  - Fixed editor log folder
+  - Fixed log with json formatting
+
 ## [0.3.4] - 2025-10-30
 
 ### Fixed
