@@ -47,13 +47,18 @@ namespace DTech.Logging.Tests
 		public void Log_WithDisabledFileLogging_DoesNotWriteToLog()
 		{
 			_settingsWrapper.OverrideFileLoggingEnabled(false);
+			string currentLogFilePath = LoggerFileProvider.CurrentLogFilePath;
+			if (File.Exists(currentLogFilePath))
+			{
+				File.Delete(currentLogFilePath);
+			}
 			
 			var logger = new CapturingFileLogger("TestTag");
 			logger.LogInfo("Hello World");
 			
-			bool exists = File.Exists(LoggerFileProvider.CurrentLogFilePath);
-			Assert.IsFalse(exists, $"File should not exist at path: {LoggerFileProvider.CurrentLogFilePath};" +
-				$"\n{File.ReadAllText(LoggerFileProvider.CurrentLogFilePath)}");
+			bool exists = File.Exists(currentLogFilePath);
+			Assert.IsFalse(exists, $"File should not exist at path: {currentLogFilePath};" +
+				$"\n{File.ReadAllText(currentLogFilePath)}");
 		}
 		
 		private sealed class CapturingFileLogger : InternalLoggerBase
