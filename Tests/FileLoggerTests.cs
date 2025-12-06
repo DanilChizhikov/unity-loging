@@ -19,6 +19,10 @@ namespace DTech.Logging.Tests
 		public void TearDown()
 		{
 			_settingsWrapper.ResetSettings();
+			if (File.Exists(LoggerFileProvider.CurrentLogFilePath))
+			{
+				File.Delete(LoggerFileProvider.CurrentLogFilePath);
+			}
 		}
 		
 		[Test]
@@ -30,8 +34,13 @@ namespace DTech.Logging.Tests
 			var logger = new CapturingFileLogger("TestTag");
 			
 			logger.LogInfo("Hello World");
+			bool exists = File.Exists(LoggerFileProvider.CurrentLogFilePath);
+			if (exists)
+			{
+				File.Delete(LoggerFileProvider.CurrentLogFilePath);
+			}
 			
-			Assert.IsTrue(File.Exists(LoggerFileProvider.CurrentLogFilePath));
+			Assert.IsTrue(exists);
 		}
 		
 		[Test]
