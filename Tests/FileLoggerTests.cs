@@ -53,8 +53,7 @@ namespace DTech.Logging.Tests
 
 			public override bool IsEnabled(LogLevel logLevel)
 			{
-				return LogConditions.IsFileLoggingEnabled &&
-					LoggerSettings.Instance.IsFileLoggingEnabled &&
+				return LoggerSettings.Instance.IsFileLoggingEnabled &&
 					LoggerSettings.Instance.IsEnabled(logLevel);
 			}
 
