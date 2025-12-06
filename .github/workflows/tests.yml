@@ -25,9 +25,6 @@ jobs:
       - name: Checkout pulse repo
         uses: actions/checkout@v4
 
-      - name: Check files
-        run: ls
-
       - name: Clone empty Unity project
         run: |
           git clone https://DanilChizhikov:${{ secrets.PRIVATE_REPO_TOKEN }}@github.com/DanilChizhikov/empty-unity-project.git empty-unity-project
@@ -59,3 +56,13 @@ jobs:
           unityVersion: 2022.3.62f2
           projectPath: ${{ matrix.projectPath }}
           testMode: ${{ matrix.testMode }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Test results for ${{ matrix.testMode }}
+          path: ${{ steps.tests.outputs.artifactsPath }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Coverage results for ${{ matrix.testMode }}
+          path: ${{ steps.tests.outputs.coveragePath }}
