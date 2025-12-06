@@ -25,6 +25,9 @@ jobs:
       - name: Checkout pulse repo
         uses: actions/checkout@v4
 
+      - name: Check files
+        run: ls
+
       - name: Clone empty Unity project
         run: |
           git clone https://DanilChizhikov:${{ secrets.PRIVATE_REPO_TOKEN }}@github.com/DanilChizhikov/empty-unity-project.git empty-unity-project
