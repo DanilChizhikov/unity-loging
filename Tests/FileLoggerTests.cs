@@ -51,7 +51,9 @@ namespace DTech.Logging.Tests
 			var logger = new CapturingFileLogger("TestTag");
 			logger.LogInfo("Hello World");
 			
-			Assert.IsFalse(File.Exists(LoggerFileProvider.CurrentLogFilePath));
+			bool exists = File.Exists(LoggerFileProvider.CurrentLogFilePath);
+			Assert.IsFalse(exists, $"File should not exist at path: {LoggerFileProvider.CurrentLogFilePath};" +
+				$"\n{File.ReadAllText(LoggerFileProvider.CurrentLogFilePath)}");
 		}
 		
 		private sealed class CapturingFileLogger : InternalLoggerBase
