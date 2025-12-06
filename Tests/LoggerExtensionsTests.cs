@@ -1,5 +1,6 @@
 using System;
 using NUnit.Framework;
+using UnityEngine;
 
 namespace DTech.Logging.Tests
 {
@@ -132,6 +133,102 @@ namespace DTech.Logging.Tests
 				logger.LogInfo("Will not be logged");
 			});
 		}
+
+		[Test]
+		public void LogInfo_WithJson_ShouldLogJson()
+		{
+			var logger = new CapturingLogger();
+			var obj = new JsonObject
+			{
+				Value = "Hello"
+			};
+
+			string json = JsonUtility.ToJson(obj);
+			
+			logger.LogInfo(json);
+			
+			Assert.AreEqual(json, logger.LastFormattedMessage);
+		}
+		
+		[Test]
+		public void LogDebug_WithJson_ShouldLogJson()
+		{
+			var logger = new CapturingLogger();
+			var obj = new JsonObject
+			{
+				Value = "Hello"
+			};
+
+			string json = JsonUtility.ToJson(obj);
+			
+			logger.LogDebug(json);
+			
+			Assert.AreEqual(json, logger.LastFormattedMessage);
+		}
+		
+		[Test]
+		public void LogWarning_WithJson_ShouldLogJson()
+		{
+			var logger = new CapturingLogger();
+			var obj = new JsonObject
+			{
+				Value = "Hello"
+			};
+
+			string json = JsonUtility.ToJson(obj);
+			
+			logger.LogWarning(json);
+			
+			Assert.AreEqual(json, logger.LastFormattedMessage);
+		}
+		
+		[Test]
+		public void LogError_WithJson_ShouldLogJson()
+		{
+			var logger = new CapturingLogger();
+			var obj = new JsonObject
+			{
+				Value = "Hello"
+			};
+
+			string json = JsonUtility.ToJson(obj);
+			
+			logger.LogError(json);
+			
+			Assert.AreEqual(json, logger.LastFormattedMessage);
+		}
+		
+		[Test]
+		public void LogCritical_WithJson_ShouldLogJson()
+		{
+			var logger = new CapturingLogger();
+			var obj = new JsonObject
+			{
+				Value = "Hello"
+			};
+
+			string json = JsonUtility.ToJson(obj);
+			
+			logger.LogCritical(json);
+			
+			Assert.AreEqual(json, logger.LastFormattedMessage);
+		}
+		
+		[Test]
+		public void LogTrace_WithJson_ShouldLogJson()
+		{
+			var logger = new CapturingLogger();
+			var obj = new JsonObject
+			{
+				Value = "Hello"
+			};
+
+			string json = JsonUtility.ToJson(obj);
+			
+			logger.LogTrace(json);
+			
+			Assert.AreEqual(json, logger.LastFormattedMessage);
+		}
 		
 		private sealed class CapturingLogger : ILogger
 		{
@@ -164,6 +261,12 @@ namespace DTech.Logging.Tests
 				LastStateTypeName = typeof(TState).Name;
 				LastFormattedMessage = formatter?.Invoke(exception);
 			}
+		}
+
+		[Serializable]
+		private class JsonObject
+		{
+			public string Value;
 		}
 	}
 }
