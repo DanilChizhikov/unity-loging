@@ -22,7 +22,7 @@ jobs:
           - editmode
 
     steps:
-      - name: Checkout pulse repo
+      - name: Checkout logging repo
         uses: actions/checkout@v4
 
       - name: Clone empty Unity project
@@ -56,6 +56,10 @@ jobs:
           unityVersion: 2022.3.62f2
           projectPath: ${{ matrix.projectPath }}
           testMode: ${{ matrix.testMode }}
+          artifactsPath: ${{ matrix.testMode }}-artifacts
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
+          checkName: ${{ matrix.testMode }} Test Results
+          coverageOptions: 'generateAdditionalMetrics;generateHtmlReport;generateBadgeReport;assemblyFilters:+my.assembly.*'
       - uses: actions/upload-artifact@v4
         if: always()
         with:
