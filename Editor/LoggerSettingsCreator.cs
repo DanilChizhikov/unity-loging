@@ -1,3 +1,4 @@
+using System.IO;
 using UnityEditor;
 using UnityEngine;
 
@@ -5,17 +6,33 @@ namespace DTech.Logging.Editor
 {
 	internal static class LoggerSettingsCreator
 	{
+		private const string ResourcesFolder = "Assets/Resources";
+		private const string AssetPath = ResourcesFolder + "/{0}.asset";
+		
 		[InitializeOnLoadMethod]
 		private static void Initialize()
 		{
-			string[] assets = AssetDatabase.FindAssets($"t:{nameof(LoggerSettings)}");
-			if (assets.Length == 0)
+			string settingsPath = string.Format(AssetPath, nameof(LoggerSettings));
+			if (!Directory.Exists(ResourcesFolder))
 			{
-				var settings = ScriptableObject.CreateInstance<LoggerSettings>();
-				AssetDatabase.CreateAsset(settings, $"Assets/Resources/{nameof(LoggerSettings)}.asset");
-				AssetDatabase.SaveAssets();
-				AssetDatabase.Refresh();
+				Directory.CreateDirectory(ResourcesFolder);
 			}
+
+			if (HasLoggerSettings(settingsPath))
+			{
+				return;
+			}
+			
+			var settings = ScriptableObject.CreateInstance<LoggerSettings>();
+			AssetDatabase.CreateAsset(settings, settingsPath);
+			AssetDatabase.SaveAssets();
+			AssetDatabase.Refresh();
+		}
+
+		private static bool HasLoggerSettings(string path)
+		{
+			var existing = AssetDatabase.LoadAssetAtPath<LoggerSettings>(path);
+			return existing != null || File.Exists(path);
 		}
 	}
 }

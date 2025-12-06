@@ -1,9 +1,11 @@
 {
     "name": "com.dtech.logging",
     "displayName": "Log System",
-    "version": "0.3.5",
+    "version": "0.3.6",
     "unity": "2022.3",
     "description": "The package helps for logging in Unity.",
+    "changelogUrl": "https://github.com/DanilChizhikov/unity-loging/releases/tag/v0.3.6",
+    "documentationUrl": "https://github.com/DanilChizhikov/unity-loging/",
     "keywords": [
         "log",
         "logging"
@@ -18,5 +20,6 @@
     "publishConfig": {
         "registry": "https://npm.pkg.github.com/@DanilChizhikov"
     },
-    "license": "MIT"
-  }
+    "license": "MIT",
+    "readme": "README.md"
+}

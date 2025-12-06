@@ -1,5 +1,6 @@
 # Logging
 [![Unity Version](https://img.shields.io/badge/unity-2022.3+-000.svg)](https://unity3d.com/get-unity/download/archive)
+![Unity Tests](https://github.com/DanilChizhikov/unity-loging/actions/workflows/tests.yml/badge.svg?branch=master)
 
 ## Table of Contents
 - [Getting Started](#getting-started)
@@ -33,9 +34,9 @@
     ```
 3. Unity will automatically import the package.
 
-If you want to set a target version, Logging uses the `v*.*.*` release tag so you can specify a version like #v0.3.5.
+If you want to set a target version, Logging uses the `v*.*.*` release tag so you can specify a version like #v0.3.6.
 
-For example `https://github.com/DanilChizhikov/unity-loging.git#v0.3.5`.
+For example `https://github.com/DanilChizhikov/unity-loging.git#v0.3.6`.
 
 ## Features
 - Multiple log levels (Trace, Debug, Information, Warning, Error, Critical)
