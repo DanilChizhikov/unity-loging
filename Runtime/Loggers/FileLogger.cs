@@ -12,16 +12,12 @@ namespace DTech.Logging
 
 		public override bool IsEnabled(LogLevel logLevel)
 		{
-			if (Application.isEditor)
+			if (Application.isEditor || !LogConditions.IsFileLoggingEnabled || !LoggerSettings.Instance.IsFileLoggingEnabled)
 			{
 				return false;
 			}
-			
-			#if DEVELOPMENT_BUILD
-			return logLevel != LogLevel.None;
-			#endif
 
-			return LoggerSettings.Instance.IsFileLoggingEnabled && LoggerSettings.Instance.IsEnabled(logLevel);
+			return LoggerSettings.Instance.IsEnabled(logLevel);
 		}
 
 		protected override void SendLog<TState>(LogLevel logLevel, Exception exception, Func<Exception, string> formatter, string scopes)

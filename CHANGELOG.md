@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.3.6] - 2025-12-06
+
+### Fixed
+- File logging
+  - Fixed log writing to file on device
+- Fixed creating `LoggerSettings`
+- Fixed formatting log if use `LoggerExtensions`
+
+### Added
+- Added `LogConditions` for control log writing
+- Added tests
+
 ## [0.3.5] - 2025-11-08
 
 ### Fixed
