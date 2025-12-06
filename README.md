@@ -1,5 +1,6 @@
 # Logging
 [![Unity Version](https://img.shields.io/badge/unity-2022.3+-000.svg)](https://unity3d.com/get-unity/download/archive)
+![Unity Tests](https://github.com/DanilChizhikov/unity-loging/actions/workflows/tests.yml/badge.svg?branch=master)
 
 ## Table of Contents
 - [Getting Started](#getting-started)
