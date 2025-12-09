@@ -38,8 +38,8 @@ namespace DTech.Logging
 		[SerializeField] private bool _isFileLoggingEnabled = true;
 
 		[Header("Log Format Settings")]
-		[SerializeField] private string _consoleFormatString = "[LOG_LEVEL]LOG_SCOPE[LOG_TAG][LOG_STATE]";
-		[SerializeField] private string _fileFormatString = "[DATE_TIME:HH:mm:ss.fff][LOG_LEVEL]LOG_SCOPE[LOG_TAG][LOG_STATE]";
+		[SerializeField] private string _consoleFormatString = "[LOG_LEVEL][LOG_SCOPE][LOG_TAG][LOG_STATE]";
+		[SerializeField] private string _fileFormatString = "[DATE_TIME:HH:mm:ss.fff][LOG_LEVEL][LOG_SCOPE][LOG_TAG][LOG_STATE]";
 		[SerializeField] private ScriptableLogPlacementReplacer[] _placementReplacers = Array.Empty<ScriptableLogPlacementReplacer>();
 		
 		private static LoggerSettings _instance;

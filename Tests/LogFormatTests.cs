@@ -1,6 +1,4 @@
 using System;
-using System.IO;
-using System.Text.RegularExpressions;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
@@ -43,7 +41,7 @@ namespace DTech.Logging.Tests
         [Test]
         [TestCase("[LOG_LEVEL]", "Test message", "[INFO] Test message")]
         [TestCase("[LOG_TAG] ", "Test message", "[LogFormatTests] Test message")]
-        [TestCase("[LOG_SCOPE] ", "Test message", "[[Scope > LogFormatTests > TestScope]] Test message")]
+        [TestCase("[LOG_SCOPE] ", "Test message", "[Scope > LogFormatTests > TestScope] Test message")]
         [TestCase("[LOG_LEVEL] [LOG_TAG] ", "Test message", "[INFO] [LogFormatTests] Test message")]
         [TestCase("", "Test message", "Test message")]
         public void Log_WithCustomConsoleFormat_AppliesFormatCorrectly(string format, string message, string expectedStart = null)
@@ -100,7 +98,7 @@ namespace DTech.Logging.Tests
             
             _settingsWrapper.ResetSettings()
                 .OverrideFileLoggingEnabled(false)
-                .OverrideConsoleFormatString("LOG_SCOPE");
+                .OverrideConsoleFormatString("[LOG_SCOPE]");
             
             var logger = new Logger<LogFormatTests>();
             

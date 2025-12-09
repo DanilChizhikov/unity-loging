@@ -7,7 +7,7 @@ namespace DTech.Logging
 	internal abstract class InternalLoggerBase : ILogger
 	{
 		private const string ScopesSeparator = " > ";
-		private const string ScopeFormat = "[Scope > {0}]";
+		private const string ScopeFormat = "Scope > {0}";
 		
 		private readonly List<string> _scopes;
 		

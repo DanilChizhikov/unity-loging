@@ -8,7 +8,15 @@ namespace DTech.Logging.Placements
 		{
 			if (template.Contains(Placement))
 			{
-				template = template.Replace(Placement, logInfo.Scopes ?? string.Empty);
+				if (string.IsNullOrEmpty(logInfo.Scopes))
+				{
+					template = template.Replace($"[{Placement}]", string.Empty);
+					template = template.Replace(Placement, string.Empty);
+				}
+				else
+				{
+					template = template.Replace(Placement, logInfo.Scopes);
+				}
 			}
 			
 			return template;
