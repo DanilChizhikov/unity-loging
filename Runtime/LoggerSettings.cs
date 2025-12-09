@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using DTech.Logging.Placements;
 using UnityEngine;
 
 namespace DTech.Logging
@@ -33,10 +36,18 @@ namespace DTech.Logging
 		
 		[Header("File Log Settings")]
 		[SerializeField] private bool _isFileLoggingEnabled = true;
+
+		[Header("Log Format Settings")]
+		[SerializeField] private string _consoleFormatString = "[LOG_LEVEL][LOG_SCOPE][LOG_TAG][LOG_STATE]";
+		[SerializeField] private string _fileFormatString = "[DATE_TIME:HH:mm:ss.fff][LOG_LEVEL][LOG_SCOPE][LOG_TAG][LOG_STATE]";
+		[SerializeField] private ScriptableLogPlacementReplacer[] _placementReplacers = Array.Empty<ScriptableLogPlacementReplacer>();
 		
 		private static LoggerSettings _instance;
-		
-		public bool IsFileLoggingEnabled => _isFileLoggingEnabled;
+
+		public bool IsFileLoggingEnabled => LogConditions.IsFileLoggingEnabled && _isFileLoggingEnabled;
+		public string ConsoleFormatString => _consoleFormatString;
+		public string FileFormatString => _fileFormatString;
+		public IReadOnlyList<ILogPlacementReplacer> PlacementReplacers => _placementReplacers;
 
 		public bool IsEnabled(LogLevel logLevel) =>
 			logLevel switch
@@ -49,13 +60,5 @@ namespace DTech.Logging
 				LogLevel.Critical => _isCriticalEnabled,
 				_ => false,
 			};
-
-		private void Reset()
-		{
-			_isFileLoggingEnabled = true;
-			#if DISABLE_FILE_LOGGING
-			_isFileLoggingEnabled = false;
-			#endif
-		}
 	}
 }
