@@ -6,6 +6,8 @@ namespace DTech.Logging
 {
 	internal sealed class FileLogger : InternalLoggerBase
 	{
+		protected override LogLineBuilder LineBuilder { get; } = new (LoggerSettings.Instance.FileFormatString);
+		
 		public FileLogger(string tag) : base(tag)
 		{
 		}

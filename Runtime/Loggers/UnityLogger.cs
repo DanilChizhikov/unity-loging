@@ -5,6 +5,8 @@ namespace DTech.Logging
 {
 	internal sealed class UnityLogger : InternalLoggerBase
 	{
+		protected override LogLineBuilder LineBuilder { get; } = new (LoggerSettings.Instance.ConsoleFormatString);
+		
 		public UnityLogger(string tag) : base(tag)
 		{
 		}
@@ -20,44 +22,17 @@ namespace DTech.Logging
 
 		protected override void SendLog<TState>(LogLevel logLevel, Exception exception, Func<Exception, string> formatter, string scopes)
 		{
-			string level = logLevel.ToString().ToUpperInvariant();
-			switch (logLevel)
-			{
-				case LogLevel.Information:
-				case LogLevel.Warning:
-				case LogLevel.Critical:
-				{
-					level = level.Substring(0, 4);
-				} break;
-			}
-			
 			string logBody = formatter(exception);
 			string stateName = typeof(TState).Name;
-			bool isNullState = stateName == NullStateName;
-			string log;
-			if (string.IsNullOrEmpty(Tag))
-			{
-				if (isNullState)
-				{
-					log = $"[{level}]{scopes} {logBody}";
-				}
-				else
-				{
-					log = $"[{level}]{scopes}[{stateName}] {logBody}";
-				}
-			}
-			else
-			{
-				if (isNullState)
-				{
-					log = $"[{level}]{scopes}[{Tag}] {logBody}";
-				}
-				else
-				{
-					log = $"[{level}]{scopes}[{Tag}][{stateName}] {logBody}";
-				}
-			}
-			
+			LineBuilder.Reset();
+			LineBuilder.SetLogLevel(logLevel)
+				.SetScopes(scopes)
+				.SetTag(Tag)
+				.SetStateName(stateName)
+				.SetBody(logBody);
+
+			string log = LineBuilder.ToString();
+			LineBuilder.Reset();
 			switch (logLevel)
 			{
 				case LogLevel.None:

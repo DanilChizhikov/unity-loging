@@ -1,12 +1,19 @@
-using System;
-using System.Text.RegularExpressions;
+using DTech.Logging.Placements;
 
 namespace DTech.Logging
 {
-	public class LogLineBuilder
+	internal sealed class LogLineBuilder
 	{
+		private static readonly ILogPlacementReplacer[] _placementReplacers = new ILogPlacementReplacer[]
+		{
+			new DateTimeLogPlacementReplacer(),
+			new LogLevelPlacementReplacer(),
+			new ScopesLogPlacementReplacer(),
+			new TagLogPlacementReplacer(),
+			new StateLogPlacementReplacer(),
+		};
+		
 		private readonly string _template;
-		private readonly string _nullStateName;
 
 		private LogLevel _logLevel;
 		private string _scopes;
@@ -14,10 +21,9 @@ namespace DTech.Logging
 		private string _stateName;
 		private string _body;
 		
-		public LogLineBuilder(string template, string nullStateName)
+		public LogLineBuilder(string template)
 		{
 			_template = template;
-			_nullStateName = nullStateName;
 		}
 		
 		public LogLineBuilder SetLogLevel(LogLevel logLevel)
@@ -52,12 +58,20 @@ namespace DTech.Logging
 
 		public override string ToString()
 		{
+			var logInfo = new LogInfo(_logLevel, _scopes, _tag, _stateName);
 			string result = _template;
-			result = ApplyLogLevel(result);
-			result = ApplyDateTime(result);
-			result = ApplyScopes(result);
-			result = ApplyTag(result);
-			result = ApplyState(result);
+
+			foreach (var placementReplacer in _placementReplacers)
+			{
+				result = placementReplacer.Replace(result, logInfo);
+			}
+			
+			for (int i = 0; i < LoggerSettings.Instance.PlacementReplacers.Count; i++)
+			{
+				ILogPlacementReplacer replacer = LoggerSettings.Instance.PlacementReplacers[i];
+				result = replacer.Replace(result, logInfo);
+			}
+			
 			result += $" {_body}";
 			return result;
 		}
@@ -69,89 +83,6 @@ namespace DTech.Logging
 			_tag = string.Empty;
 			_stateName = string.Empty;
 			_body = string.Empty;
-		}
-		
-		private string ApplyLogLevel(string result)
-		{
-			if (result.Contains("LOG_LEVEL"))
-			{
-				string level = _logLevel.ToString().ToUpperInvariant();
-				switch (_logLevel)
-				{
-					case LogLevel.Information:
-					case LogLevel.Warning:
-					case LogLevel.Critical:
-					{
-						level = level.Substring(0, 4);
-					} break;
-				}
-				
-				result = result.Replace("LOG_LEVEL", level);
-			}
-
-
-			return result;
-		}
-
-		private string ApplyDateTime(string result)
-		{
-			if (result.Contains("DATE_TIME"))
-			{
-				result = Regex.Replace(result, @"DATE_TIME:([^\]]+)", match =>
-				{
-					string dtFormat = match.Groups[1].Value;
-					return DateTime.Now.ToString(dtFormat);
-				});
-			}
-			
-			return result;
-		}
-
-		private string ApplyScopes(string result)
-		{
-			if (result.Contains("LOG_SCOPE"))
-			{
-				result = result.Replace("LOG_SCOPE", _scopes ?? string.Empty);
-			}
-			
-			return result;
-		}
-
-		private string ApplyTag(string result)
-		{
-			if (result.Contains("LOG_TAG"))
-			{
-				if (string.IsNullOrEmpty(_tag))
-				{
-					result = result.Replace("[LOG_TAG]", string.Empty);
-					result = result.Replace("LOG_TAG", "");
-				}
-				else
-				{
-					result = result.Replace("LOG_TAG", _tag);
-				}
-			}
-			
-			return result;
-		}
-		
-		private string ApplyState(string result)
-		{
-			if (result.Contains("LOG_STATE"))
-			{
-				string stateName = _stateName == _nullStateName ? string.Empty : _stateName;
-				if (string.IsNullOrEmpty(stateName))
-				{
-					result = result.Replace("[LOG_STATE]", string.Empty);
-					result = result.Replace("LOG_STATE", "");
-				}
-				else
-				{
-					result = result.Replace("LOG_TAG", stateName);
-				}
-			}
-			
-			return result;
 		}
 	}
 }

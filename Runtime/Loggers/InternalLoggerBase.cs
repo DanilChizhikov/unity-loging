@@ -15,6 +15,7 @@ namespace DTech.Logging
 		
 		protected string Tag { get; }
 		protected string NullStateName => nameof(NullState);
+		protected abstract LogLineBuilder LineBuilder { get; }
 
 		public InternalLoggerBase(string tag)
 		{
