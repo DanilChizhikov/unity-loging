@@ -26,7 +26,6 @@ namespace DTech.Logging
 			}
 		}
 		
-		[Header("Log Release Settings")]
 		[SerializeField] private bool _isTraceEnabled = false;
 		[SerializeField] private bool _isDebugEnabled = false;
 		[SerializeField] private bool _isInformationEnabled = true;
@@ -34,10 +33,8 @@ namespace DTech.Logging
 		[SerializeField] private bool _isErrorEnabled = true;
 		[SerializeField] private bool _isCriticalEnabled = true;
 		
-		[Header("File Log Settings")]
 		[SerializeField] private bool _isFileLoggingEnabled = true;
-
-		[Header("Log Format Settings")]
+		
 		[SerializeField] private string _consoleFormatString = "[LOG_LEVEL][LOG_SCOPE][LOG_TAG][LOG_STATE]";
 		[SerializeField] private string _fileFormatString = "[DATE_TIME:HH:mm:ss.fff][LOG_LEVEL][LOG_SCOPE][LOG_TAG][LOG_STATE]";
 		[SerializeField] private ScriptableLogPlacementReplacer[] _placementReplacers = Array.Empty<ScriptableLogPlacementReplacer>();
