@@ -58,7 +58,7 @@ namespace DTech.Logging.Editor
 		{
 			if (Application.isPlaying && LogEditorUtility.IsEditorLogWriterEnabled)
 			{
-				WriteLog(type.ToString(), condition.CleanColorTags(), stackTrace);
+				WriteLog(type.ToString(), condition, stackTrace);
 			}
 		}
 	}
