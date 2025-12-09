@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using DTech.Logging.Placements;
 
 namespace DTech.Logging
@@ -14,6 +15,7 @@ namespace DTech.Logging
 		};
 		
 		private readonly string _template;
+		private readonly List<ILogPlacementReplacer> _replacers;
 
 		private LogLevel _logLevel;
 		private string _scopes;
@@ -21,9 +23,10 @@ namespace DTech.Logging
 		private string _stateName;
 		private string _body;
 		
-		public LogLineBuilder(string template)
+		public LogLineBuilder(string template, IEnumerable<ILogPlacementReplacer> replacers)
 		{
 			_template = template;
+			_replacers = new List<ILogPlacementReplacer>(replacers);
 		}
 		
 		public LogLineBuilder SetLogLevel(LogLevel logLevel)
@@ -58,21 +61,33 @@ namespace DTech.Logging
 
 		public override string ToString()
 		{
-			var logInfo = new LogInfo(_logLevel, _scopes, _tag, _stateName);
 			string result = _template;
+			if (string.IsNullOrEmpty(result))
+			{
+				result = _body;
+			}
+			else
+			{
+				var logInfo = new LogInfo(_logLevel, _scopes, _tag, _stateName);
+				foreach (var placementReplacer in _placementReplacers)
+				{
+					result = placementReplacer.Replace(result, logInfo);
+				}
+			
+				for (int i = 0; i < _replacers.Count; i++)
+				{
+					ILogPlacementReplacer replacer = _replacers[i];
+					result = replacer.Replace(result, logInfo);
+				}
 
-			foreach (var placementReplacer in _placementReplacers)
-			{
-				result = placementReplacer.Replace(result, logInfo);
+				if (result.EndsWith(" "))
+				{
+					result = result.Remove(result.Length - 1);
+				}
+				
+				result += $" {_body}";
 			}
 			
-			for (int i = 0; i < LoggerSettings.Instance.PlacementReplacers.Count; i++)
-			{
-				ILogPlacementReplacer replacer = LoggerSettings.Instance.PlacementReplacers[i];
-				result = replacer.Replace(result, logInfo);
-			}
-			
-			result += $" {_body}";
 			return result;
 		}
 

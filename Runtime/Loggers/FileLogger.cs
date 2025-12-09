@@ -6,7 +6,8 @@ namespace DTech.Logging
 {
 	internal sealed class FileLogger : InternalLoggerBase
 	{
-		protected override LogLineBuilder LineBuilder { get; } = new (LoggerSettings.Instance.FileFormatString);
+		protected override LogLineBuilder LineBuilder { get; } =
+			new(LoggerSettings.Instance.FileFormatString, LoggerSettings.Instance.PlacementReplacers);
 		
 		public FileLogger(string tag) : base(tag)
 		{
@@ -24,42 +25,18 @@ namespace DTech.Logging
 				return;
 			}
 			
-			using var stream = new StreamWriter(LoggerFileProvider.CurrentLogFilePath, true);
-			string level = logLevel.ToString().ToUpperInvariant();
-			switch (logLevel)
-			{
-				case LogLevel.Information:
-				case LogLevel.Warning:
-				case LogLevel.Critical:
-				{
-					level = level.Substring(0, 4);
-				} break;
-			}
-
+			string logBody = formatter(exception);
 			string stateName = typeof(TState).Name;
-			bool isNullState = stateName == NullStateName;
-			if (string.IsNullOrEmpty(Tag))
-			{
-				if (isNullState)
-				{
-					stream.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}][{level}]{scopes} {formatter(exception)}");
-				}
-				else
-				{
-					stream.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}][{level}]{scopes}[{stateName}] {formatter(exception)}");	
-				}
-			}
-			else
-			{
-				if (isNullState)
-				{
-					stream.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}][{level}]{scopes}[{Tag}] {formatter(exception)}");
-				}
-				else
-				{
-					stream.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}][{level}]{scopes}[{Tag}][{stateName}] {formatter(exception)}");
-				}
-			}
+			LineBuilder.Reset();
+			LineBuilder.SetLogLevel(logLevel)
+				.SetScopes(scopes)
+				.SetTag(Tag)
+				.SetStateName(stateName)
+				.SetBody(logBody);
+			
+			using var stream = new StreamWriter(LoggerFileProvider.CurrentLogFilePath, true);
+			stream.WriteLine(LineBuilder.ToString());
+			LineBuilder.Reset();
 		}
 
 		private bool IsLogEnabled() => !Application.isEditor && LoggerSettings.Instance.IsFileLoggingEnabled;

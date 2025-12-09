@@ -5,7 +5,8 @@ namespace DTech.Logging
 {
 	internal sealed class UnityLogger : InternalLoggerBase
 	{
-		protected override LogLineBuilder LineBuilder { get; } = new (LoggerSettings.Instance.ConsoleFormatString);
+		protected override LogLineBuilder LineBuilder { get; } =
+			new(LoggerSettings.Instance.ConsoleFormatString, LoggerSettings.Instance.PlacementReplacers);
 		
 		public UnityLogger(string tag) : base(tag)
 		{
