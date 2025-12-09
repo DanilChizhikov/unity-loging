@@ -34,9 +34,9 @@
     ```
 3. Unity will automatically import the package.
 
-If you want to set a target version, Logging uses the `v*.*.*` release tag so you can specify a version like #v0.3.6.
+If you want to set a target version, Logging uses the `v*.*.*` release tag so you can specify a version like #v0.4.0.
 
-For example `https://github.com/DanilChizhikov/unity-loging.git#v0.3.6`.
+For example `https://github.com/DanilChizhikov/unity-loging.git#v0.4.0`.
 
 ## Features
 - Multiple log levels (Trace, Debug, Information, Warning, Error, Critical)
