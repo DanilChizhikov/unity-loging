@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using DTech.Logging.Placements;
 using UnityEngine;
 
 namespace DTech.Logging
@@ -23,7 +26,6 @@ namespace DTech.Logging
 			}
 		}
 		
-		[Header("Log Release Settings")]
 		[SerializeField] private bool _isTraceEnabled = false;
 		[SerializeField] private bool _isDebugEnabled = false;
 		[SerializeField] private bool _isInformationEnabled = true;
@@ -31,12 +33,18 @@ namespace DTech.Logging
 		[SerializeField] private bool _isErrorEnabled = true;
 		[SerializeField] private bool _isCriticalEnabled = true;
 		
-		[Header("File Log Settings")]
 		[SerializeField] private bool _isFileLoggingEnabled = true;
 		
-		private static LoggerSettings _instance;
+		[SerializeField] private string _consoleFormatString = "[LOG_LEVEL][LOG_SCOPE][LOG_TAG][LOG_STATE]";
+		[SerializeField] private string _fileFormatString = "[DATE_TIME:HH:mm:ss.fff][LOG_LEVEL][LOG_SCOPE][LOG_TAG][LOG_STATE]";
+		[SerializeField] private ScriptableLogPlacementReplacer[] _placementReplacers = Array.Empty<ScriptableLogPlacementReplacer>();
 		
-		public bool IsFileLoggingEnabled => _isFileLoggingEnabled;
+		private static LoggerSettings _instance;
+
+		public bool IsFileLoggingEnabled => LogConditions.IsFileLoggingEnabled && _isFileLoggingEnabled;
+		public string ConsoleFormatString => _consoleFormatString;
+		public string FileFormatString => _fileFormatString;
+		public IReadOnlyList<ILogPlacementReplacer> PlacementReplacers => _placementReplacers;
 
 		public bool IsEnabled(LogLevel logLevel) =>
 			logLevel switch
@@ -49,13 +57,5 @@ namespace DTech.Logging
 				LogLevel.Critical => _isCriticalEnabled,
 				_ => false,
 			};
-
-		private void Reset()
-		{
-			_isFileLoggingEnabled = true;
-			#if DISABLE_FILE_LOGGING
-			_isFileLoggingEnabled = false;
-			#endif
-		}
 	}
 }

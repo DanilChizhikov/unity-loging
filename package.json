@@ -1,10 +1,10 @@
 {
     "name": "com.dtech.logging",
     "displayName": "Log System",
-    "version": "0.3.6",
+    "version": "0.4.0",
     "unity": "2022.3",
     "description": "The package helps for logging in Unity.",
-    "changelogUrl": "https://github.com/DanilChizhikov/unity-loging/releases/tag/v0.3.6",
+    "changelogUrl": "https://github.com/DanilChizhikov/unity-loging/releases/tag/v0.4.0",
     "documentationUrl": "https://github.com/DanilChizhikov/unity-loging/",
     "keywords": [
         "log",

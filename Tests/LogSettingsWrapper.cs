@@ -11,6 +11,8 @@ namespace DTech.Logging.Tests
 		private const string IsErrorEnabledFieldName = "_isErrorEnabled";
 		private const string IsCriticalEnabledFieldName = "_isCriticalEnabled";
 		private const string IsFileLoggingEnabledFieldName = "_isFileLoggingEnabled";
+		private const string ConsoleFormatStringFieldName = "_consoleFormatString";
+		private const string FileFormatStringFieldName = "_fileFormatString";
 
 		private readonly LoggerSettings _settings;
 		private readonly bool _isTraceEnabled;
@@ -20,6 +22,8 @@ namespace DTech.Logging.Tests
 		private readonly bool _isErrorEnabled;
 		private readonly bool _isCriticalEnabled;
 		private readonly bool _isFileLoggingEnabled;
+		private readonly string _consoleFormatString;
+		private readonly string _fileFormatString;
 
 		public LogSettingsWrapper(LoggerSettings settings)
 		{
@@ -31,6 +35,8 @@ namespace DTech.Logging.Tests
 			_isErrorEnabled = GetPrivateBool(IsErrorEnabledFieldName);
 			_isCriticalEnabled = GetPrivateBool(IsCriticalEnabledFieldName);
 			_isFileLoggingEnabled = GetPrivateBool(IsFileLoggingEnabledFieldName);
+			_consoleFormatString = GetPrivateString(ConsoleFormatStringFieldName);
+			_fileFormatString = GetPrivateString(FileFormatStringFieldName);
 		}
 
 		public LogSettingsWrapper OverrideTraceEnabled(bool enabled)
@@ -74,6 +80,18 @@ namespace DTech.Logging.Tests
 			SetPrivateBoolField(IsFileLoggingEnabledFieldName, enabled);
 			return this;
 		}
+		
+		public LogSettingsWrapper OverrideConsoleFormatString(string formatString)
+		{
+			SetPrivateStringField(ConsoleFormatStringFieldName, formatString);
+			return this;
+		}
+
+		public LogSettingsWrapper OverrideFileFormatString(string formatString)
+		{
+			SetPrivateStringField(FileFormatStringFieldName, formatString);
+			return this;
+		}
 
 		public LogSettingsWrapper ResetSettings()
 		{
@@ -84,6 +102,8 @@ namespace DTech.Logging.Tests
 			SetPrivateBoolField(IsErrorEnabledFieldName, _isErrorEnabled);
 			SetPrivateBoolField(IsCriticalEnabledFieldName, _isCriticalEnabled);
 			SetPrivateBoolField(IsFileLoggingEnabledFieldName, _isFileLoggingEnabled);
+			SetPrivateStringField(ConsoleFormatStringFieldName, _consoleFormatString);
+			SetPrivateStringField(FileFormatStringFieldName, _fileFormatString);
 			return this;
 		}
 
@@ -94,6 +114,18 @@ namespace DTech.Logging.Tests
 		}
 		
 		private void SetPrivateBoolField(string fieldName, bool value)
+		{
+			var field = typeof(LoggerSettings).GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
+			field?.SetValue(_settings, value);
+		}
+		
+		private string GetPrivateString(string fieldName)
+		{
+			FieldInfo field = typeof(LoggerSettings).GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
+			return (string)field.GetValue(_settings);
+		}
+		
+		private void SetPrivateStringField(string fieldName, string value)
 		{
 			var field = typeof(LoggerSettings).GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
 			field?.SetValue(_settings, value);

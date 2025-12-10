@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.4.0] - 2025-12-10
+
+## Removed
+- Legacy code
+
+## Added
+- Placement replacers
+  - `ILogPlacementReplacer` - interface for replace log placement from log format template
+    - `DateTimeLogPlacementReplacer` - replace placement `DATE_TIME:date_time_format`
+    - `LogLevelPlacementReplacer` - replace placement `LOG_LEVEL`
+    - `ScopesLogPlacementReplacer` - replace placement `LOG_SCOPE`
+    - `StateLogPlacementReplacer` - replace placement `LOG_STATE`
+    - `TagLogPlacementReplacer` - replace placement `LOG_TAG`
+    - `ScriptableLogPlacementReplacer` - base repalce class for custom replacers
+- Inspector Drawer for `LoggerSettings`
+- Editor Window for `LoggerSettings` you can find it in `Tools/DTech/Logger/Settings`
+- Logger Settings
+  - Added `Console Format String` property
+  - Added `File Format String` property
+  - Added `Placement Replacers` property
+
 ## [0.3.6] - 2025-12-06
 
 ### Fixed

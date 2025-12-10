@@ -54,7 +54,7 @@ namespace DTech.Logging.Editor
 
 					default:
 					{
-						Debug.LogError("Платформа не поддерживается для открытия папки");
+						Debug.LogError($"Platform {Application.platform} not supported for opening folder");
 					} break;
 				}
 			}

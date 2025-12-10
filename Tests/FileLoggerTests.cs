@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using DTech.Logging.Placements;
 using NUnit.Framework;
 
 namespace DTech.Logging.Tests
@@ -31,7 +32,7 @@ namespace DTech.Logging.Tests
 			_settingsWrapper.OverrideInformationEnabled(true)
 				.OverrideFileLoggingEnabled(true);
 			
-			var logger = new CapturingFileLogger("TestTag");
+			var logger = new CapturingFileLogger("TestTag", LoggerSettings.Instance.FileFormatString);
 			
 			logger.LogInfo("Hello World");
 			bool exists = File.Exists(LoggerFileProvider.CurrentLogFilePath);
@@ -53,7 +54,7 @@ namespace DTech.Logging.Tests
 				File.Delete(currentLogFilePath);
 			}
 			
-			var logger = new CapturingFileLogger("TestTag");
+			var logger = new CapturingFileLogger("TestTag", LoggerSettings.Instance.FileFormatString);
 			logger.LogInfo("Hello World");
 			
 			bool exists = File.Exists(currentLogFilePath);
@@ -64,8 +65,11 @@ namespace DTech.Logging.Tests
 		
 		private sealed class CapturingFileLogger : InternalLoggerBase
 		{
-			public CapturingFileLogger(string tag) : base(tag)
+			protected override LogLineBuilder LineBuilder { get; }
+			
+			public CapturingFileLogger(string tag, string logTemplate) : base(tag)
 			{
+				LineBuilder = new LogLineBuilder(logTemplate, Array.Empty<ILogPlacementReplacer>());
 			}
 
 			public override bool IsEnabled(LogLevel logLevel)
@@ -81,42 +85,18 @@ namespace DTech.Logging.Tests
 					return;
 				}
 			
-				using var stream = new StreamWriter(LoggerFileProvider.CurrentLogFilePath, true);
-				string level = logLevel.ToString().ToUpperInvariant();
-				switch (logLevel)
-				{
-					case LogLevel.Information:
-					case LogLevel.Warning:
-					case LogLevel.Critical:
-					{
-						level = level.Substring(0, 4);
-					} break;
-				}
-
+				string logBody = formatter(exception);
 				string stateName = typeof(TState).Name;
-				bool isNullState = stateName == NullStateName;
-				if (string.IsNullOrEmpty(Tag))
-				{
-					if (isNullState)
-					{
-						stream.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}][{level}]{scopes} {formatter(exception)}");
-					}
-					else
-					{
-						stream.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}][{level}]{scopes}[{stateName}] {formatter(exception)}");	
-					}
-				}
-				else
-				{
-					if (isNullState)
-					{
-						stream.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}][{level}]{scopes}[{Tag}] {formatter(exception)}");
-					}
-					else
-					{
-						stream.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}][{level}]{scopes}[{Tag}][{stateName}] {formatter(exception)}");
-					}
-				}
+				LineBuilder.Reset();
+				LineBuilder.SetLogLevel(logLevel)
+					.SetScopes(scopes)
+					.SetTag(Tag)
+					.SetStateName(stateName)
+					.SetBody(logBody);
+			
+				using var stream = new StreamWriter(LoggerFileProvider.CurrentLogFilePath, true);
+				stream.WriteLine(LineBuilder.ToString());
+				LineBuilder.Reset();
 			}
 		}
 	}
