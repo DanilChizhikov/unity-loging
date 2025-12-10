@@ -2,6 +2,10 @@
 [![Unity Version](https://img.shields.io/badge/unity-2022.3+-000.svg)](https://unity3d.com/get-unity/download/archive)
 ![Unity Tests](https://github.com/DanilChizhikov/unity-loging/actions/workflows/tests.yml/badge.svg?branch=master)
 
+## Overview
+The package provides a simple and flexible system for logging in Unity. It allows you to control the level of logging, 
+log messages with different levels, and structure log messages with named parameters.
+
 ## Table of Contents
 - [Getting Started](#getting-started)
     - [Prerequisites](#prerequisites)
@@ -13,7 +17,7 @@
     - [Basic Logging](#basic-logging)
     - [Log Levels](#log-levels)
     - [Scopes](#scopes)
-- [API Reference](#api-reference)
+    - [Placements](#placements)
 - [License](#license)
 
 ## Getting Started
@@ -46,6 +50,7 @@ For example `https://github.com/DanilChizhikov/unity-loging.git#v0.4.0`.
 - Thread-safe implementation
 - Extensible logging pipeline
 - Compatible with Microsoft.Extensions.Logging patterns
+- Log format template
 
 ## Settings
 For control log on release builds, you can use the `LoggerSettings`.
@@ -118,6 +123,32 @@ using (_logger.BeginScope("OperationScope"))
     _logger.LogInfo("Operation completed");
 }
 ```
+
+### Placements
+
+Logger allows you to format log messages with placeholders.
+These placeholders are replaced by values when the log message is written.
+
+Supported placeholders:
+
+- `LOG_TAG` - The log tag.
+- `LOG_LEVEL` - The log level.
+- `LOG_SCOPE` - The current scope.
+- `LOG_STATE` - The current state.
+- `DATE_TIME:date_time_format` - The current date and time. Replaces `date_time_format` with the desired format.
+
+For example, if you want log messages to be in the format:
+
+```csharp
+[DATE_TIME:HH:mm:ss.fff][LOG_LEVEL][LOG_SCOPE][LOG_TAG][LOG_STATE] Your Message
+```
+
+You can set the `Console Format String` property to `[LOG_LEVEL][LOG_SCOPE][LOG_TAG][LOG_STATE]`.
+
+#### Custom Replacers
+
+To add your own replacers, you can create a new class that inherits from `ScriptableLogPlacementReplacer` and override the `Replace` method.
+Then, you need to add an instance of your class to the `PlacementReplacers` property of the `LoggerSettings` object.
 
 ## License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
