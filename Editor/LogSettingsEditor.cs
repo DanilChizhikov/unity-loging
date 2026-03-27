@@ -15,8 +15,8 @@ namespace DTech.Logging.Editor
 		private const string IsFileLoggingEnabledPropertyName = "_isFileLoggingEnabled";
 		private const string ConsoleFormatStringPropertyName = "_consoleFormatString";
 		private const string FileFormatStringPropertyName = "_fileFormatString";
+		private const string PlacementReplacersPropertyName = "_placementReplacers";
 		
-		private LoggerSettings _settings;
 		private SerializedProperty _isTraceEnabled;
 		private SerializedProperty _isDebugEnabled;
 		private SerializedProperty _isInformationEnabled;
@@ -30,10 +30,12 @@ namespace DTech.Logging.Editor
 
 		public override void OnInspectorGUI()
 		{
-			if (_settings == null)
+			if (target == null)
 			{
 				return;
 			}
+
+			serializedObject.Update();
 			
 			EditorGUILayout.LabelField("Log Release Settings", EditorStyles.boldLabel);
 			EditorGUILayout.PropertyField(_isTraceEnabled);
@@ -55,11 +57,12 @@ namespace DTech.Logging.Editor
 				EditorGUILayout.PropertyField(_fileFormatString);
 				_listDrawer.Draw();
 			}
+
+			serializedObject.ApplyModifiedProperties();
 		}
 		
 		private void OnEnable()
 		{
-			_settings = target as LoggerSettings;
 			_isTraceEnabled = serializedObject.FindProperty(IsTraceEnabledPropertyName);
 			_isDebugEnabled = serializedObject.FindProperty(IsDebugEnabledPropertyName);
 			_isInformationEnabled = serializedObject.FindProperty(IsInformationEnabledPropertyName);
@@ -69,13 +72,13 @@ namespace DTech.Logging.Editor
 			_isFileLoggingEnabled = serializedObject.FindProperty(IsFileLoggingEnabledPropertyName);
 			_consoleFormatString = serializedObject.FindProperty(ConsoleFormatStringPropertyName);
 			_fileFormatString = serializedObject.FindProperty(FileFormatStringPropertyName);
-			_listDrawer = new ScriptableLogPlacementReplacerListDrawer(_settings);
+			SerializedProperty placementReplacers = serializedObject.FindProperty(PlacementReplacersPropertyName);
+			_listDrawer = new ScriptableLogPlacementReplacerListDrawer(serializedObject, placementReplacers);
 		}
 		
 		private void OnDisable()
 		{
-			_settings = null;
-			_listDrawer.Dispose();
+			_listDrawer?.Dispose();
 			_listDrawer = null;
 			_isTraceEnabled = null;
 			_isDebugEnabled = null;
