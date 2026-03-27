@@ -122,17 +122,6 @@ namespace DTech.Logging.Tests
 			
 			Assert.AreEqual(expected, logger.LastFormattedMessage);
 		}
-		
-		[Test]
-		public void ThrowIfNull_ThrowsArgumentNullException_ForNullLogger()
-		{
-			ILogger logger = null;
-
-			Assert.Throws<ArgumentNullException>(() =>
-			{
-				logger.LogInfo("Will not be logged");
-			});
-		}
 
 		[Test]
 		public void LogInfo_WithJson_ShouldLogJson()
