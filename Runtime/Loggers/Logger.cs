@@ -52,14 +52,14 @@ namespace DTech.Logging
 			return false;
 		}
 
-		public void Log<TState>(LogLevel logLevel, Exception exception, Func<Exception, string> formatter)
+		public void Log<TState>(LogLevel logLevel, Exception exception, string message, object[] args)
 		{
 			for (int i = 0; i < _loggers.Length; i++)
 			{
 				ILogger logger = _loggers[i];
 				if (logger.IsEnabled(logLevel))
 				{
-					logger.Log<TState>(logLevel, exception, formatter);
+					logger.Log<TState>(logLevel, exception, message, args);
 				}
 			}
 		}
@@ -94,9 +94,9 @@ namespace DTech.Logging
 			return _logger.IsEnabled(logLevel);
 		}
 
-		public void Log<TState>(LogLevel logLevel, Exception exception, Func<Exception, string> formatter)
+		public void Log<TState>(LogLevel logLevel, Exception exception, string message, object[] args)
 		{
-			_logger.Log<TState>(logLevel, exception, formatter);
+			_logger.Log<TState>(logLevel, exception, message, args);
 		}
 	}
 }

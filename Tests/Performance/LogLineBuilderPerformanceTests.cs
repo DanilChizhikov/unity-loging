@@ -10,12 +10,12 @@ namespace DTech.Logging.Tests.Performance
         private LogLineBuilder _builder;
 
         [SetUp]
-        public void SetUp()
-        {
-            _builder = new LogLineBuilder(
-                "[{DateTime:HH:mm:ss}] [{LogLevel}] [{Tag}] {Body}",
-                Array.Empty<Placements.ILogPlacementReplacer>());
-        }
+	        public void SetUp()
+	        {
+	            _builder = new LogLineBuilder(
+	                "[DATE_TIME:HH:mm:ss] [LOG_LEVEL] [LOG_TAG]",
+	                Array.Empty<Placements.ILogPlacementReplacer>());
+	        }
 
         [Test, Performance]
         public void LogLineBuilder_SetProperties_Performance()

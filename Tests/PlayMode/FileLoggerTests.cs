@@ -78,15 +78,15 @@ namespace DTech.Logging.Tests
 					LoggerSettings.Instance.IsEnabled(logLevel);
 			}
 
-			protected override void SendLog<TState>(LogLevel logLevel, Exception exception, Func<Exception, string> formatter, string scopes)
-			{
-				if (!LoggerSettings.Instance.IsFileLoggingEnabled)
+				protected override void SendLog<TState>(LogLevel logLevel, Exception exception, string message, object[] args, string scopes)
 				{
-					return;
-				}
-			
-				string logBody = formatter(exception);
-				string stateName = typeof(TState).Name;
+					if (!LoggerSettings.Instance.IsFileLoggingEnabled)
+					{
+						return;
+					}
+				
+					string logBody = FormatMessage(exception, message, args);
+					string stateName = typeof(TState).Name;
 				LineBuilder.Reset();
 				LineBuilder.SetLogLevel(logLevel)
 					.SetScopes(scopes)

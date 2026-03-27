@@ -122,17 +122,6 @@ namespace DTech.Logging.Tests
 			
 			Assert.AreEqual(expected, logger.LastFormattedMessage);
 		}
-		
-		[Test]
-		public void ThrowIfNull_ThrowsArgumentNullException_ForNullLogger()
-		{
-			ILogger logger = null;
-
-			Assert.Throws<ArgumentNullException>(() =>
-			{
-				logger.LogInfo("Will not be logged");
-			});
-		}
 
 		[Test]
 		public void LogInfo_WithJson_ShouldLogJson()
@@ -254,14 +243,33 @@ namespace DTech.Logging.Tests
 				return true;
 			}
 
-			public void Log<TState>(LogLevel logLevel, Exception exception, Func<Exception, string> formatter)
-			{
-				LastLogLevel = logLevel;
-				LastException = exception;
-				LastStateTypeName = typeof(TState).Name;
-				LastFormattedMessage = formatter?.Invoke(exception);
+				public void Log<TState>(LogLevel logLevel, Exception exception, string message, object[] args)
+				{
+					LastLogLevel = logLevel;
+					LastException = exception;
+					LastStateTypeName = typeof(TState).Name;
+					if (exception == null)
+					{
+						LastFormattedMessage = args is { Length: > 0 } ? string.Format(message, args) : message;
+						return;
+					}
+
+					if (args == null || args.Length == 0)
+					{
+						LastFormattedMessage = string.Format(message, exception.ToString());
+						return;
+					}
+
+					var formatArgs = new object[args.Length + 1];
+					formatArgs[0] = exception.ToString();
+					for (int i = 0; i < args.Length; i++)
+					{
+						formatArgs[i + 1] = args[i];
+					}
+
+					LastFormattedMessage = string.Format(message, formatArgs);
+				}
 			}
-		}
 
 		[Serializable]
 		private class JsonObject

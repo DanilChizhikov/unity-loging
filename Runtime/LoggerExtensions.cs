@@ -18,7 +18,6 @@ namespace DTech.Logging
 		/// </example>
 		public static IDisposable BeginScope(this ILogger logger, string messageFormat, params object[] args)
 		{
-			logger.ThrowIfNull();
 			var message = args.Length > 0 ? string.Format(messageFormat, args) : messageFormat;
 			return logger.BeginScope(message);
 		}
@@ -34,27 +33,7 @@ namespace DTech.Logging
 		/// <typeparam name="TState">The type of the object to be written.</typeparam>
 		public static void Log<TState>(this ILogger logger, LogLevel logLevel, Exception exception, string message, params object[] args)
 		{
-			logger.ThrowIfNull();
-			logger.Log<TState>(logLevel, exception, Formatter);
-
-			string Formatter(Exception ex)
-			{
-				bool hasException = ex != null;
-				int lenght = hasException ? args.Length + 1 : args.Length;
-				object[] param = new object[lenght];
-				if (hasException)
-				{
-					param[0] = ex.ToString();
-				}
-				
-				for (int i = 0; i < args.Length; i++)
-				{
-					int paramIndex = hasException ? i + 1 : i;
-					param[paramIndex] = args[i];
-				}
-				
-				return string.Format(message, param);
-			}
+			logger.Log<TState>(logLevel, exception, message, args);
 		}
 
 		/// <summary>
@@ -67,18 +46,7 @@ namespace DTech.Logging
 		/// <typeparam name="TState">The type of the object to be written.</typeparam>
 		public static void Log<TState>(this ILogger logger, LogLevel logLevel, string message, params object[] args)
 		{
-			logger.ThrowIfNull();
-			logger.Log<TState>(logLevel, null, Formatter);
-
-			string Formatter(Exception ex)
-			{
-				if (args.Length == 0)
-				{
-					return message;
-				}
-				
-				return string.Format(message, args);
-			}
+			logger.Log<TState>(logLevel, null, message, args);
 		}
 		
 		/// <summary>
@@ -90,17 +58,7 @@ namespace DTech.Logging
 		/// <param name="args">An object array that contains zero or more objects to format.</param>
 		public static void Log(this ILogger logger, LogLevel logLevel, string message, params object[] args)
 		{
-			logger.ThrowIfNull();
-			logger.Log<NullState>(logLevel, null, Formatter);
-			string Formatter(Exception ex)
-			{
-				if (args.Length == 0)
-				{
-					return message;
-				}
-				
-				return string.Format(message, args);
-			}
+			logger.Log<NullState>(logLevel, null, message, args);
 		}
 
 		/// <summary>Formats and writes a critical log message.</summary>
@@ -112,7 +70,6 @@ namespace DTech.Logging
 		/// <example>logger.LogCritical(exception, "Error while processing request from {Address}", address)</example>
 		public static void LogCritical<TState>(this ILogger logger, Exception exception, string message, params object[] args)
 		{
-			logger.ThrowIfNull();
 			logger.Log<TState>(LogLevel.Critical, exception, message, args);
 		}
 
@@ -124,7 +81,6 @@ namespace DTech.Logging
 		/// <example>logger.LogCritical("Processing request from {Address}", address)</example>
 		public static void LogCritical<TState>(this ILogger logger, string message, params object[] args)
 		{
-			logger.ThrowIfNull();
 			logger.Log<TState>(LogLevel.Critical, message, args);
 		}
 		
@@ -147,7 +103,6 @@ namespace DTech.Logging
 		/// <example>logger.LogDebug(exception, "Error while processing request from {Address}", address)</example>
 		public static void LogDebug<TState>(this ILogger logger, Exception exception, string message, params object[] args)
 		{
-			logger.ThrowIfNull();
 			logger.Log<TState>(LogLevel.Debug, exception, message, args);
 		}
 
@@ -159,7 +114,6 @@ namespace DTech.Logging
 		/// <example>logger.LogDebug("Processing request from {Address}", address)</example>
 		public static void LogDebug<TState>(this ILogger logger, string message, params object[] args)
 		{
-			logger.ThrowIfNull();
 			logger.Log<TState>(LogLevel.Debug, message, args);
 		}
 		
@@ -182,7 +136,6 @@ namespace DTech.Logging
 		/// <example>logger.LogError(exception, "Error while processing request from {Address}", address)</example>
 		public static void LogError<TState>(this ILogger logger, Exception exception, string message, params object[] args)
 		{
-			logger.ThrowIfNull();
 			logger.Log<TState>(LogLevel.Error, exception, message, args);
 		}
 
@@ -194,7 +147,6 @@ namespace DTech.Logging
 		/// <example>logger.LogError("Processing request from {Address}", address)</example>
 		public static void LogError<TState>(this ILogger logger, string message, params object[] args)
 		{
-			logger.ThrowIfNull();
 			logger.Log<TState>(LogLevel.Error, message, args);
 		}
 		
@@ -217,7 +169,6 @@ namespace DTech.Logging
 		/// <example>logger.LogInfo(exception, "Error while processing request from {Address}", address)</example>
 		public static void LogInfo<TState>(this ILogger logger, Exception exception, string message, params object[] args)
 		{
-			logger.ThrowIfNull();
 			logger.Log<TState>(LogLevel.Information, exception, message, args);
 		}
 
@@ -229,7 +180,6 @@ namespace DTech.Logging
 		/// <example>logger.LogInfo("Processing request from {Address}", address)</example>
 		public static void LogInfo<TState>(this ILogger logger, string message, params object[] args)
 		{
-			logger.ThrowIfNull();
 			logger.Log<TState>(LogLevel.Information, message, args);
 		}
 		
@@ -250,10 +200,8 @@ namespace DTech.Logging
 		/// <param name="args">An object array that contains zero or more objects to format.</param>
 		/// <typeparam name="TState">The type of the object to be written.</typeparam>
 		/// <example>logger.LogTrace(exception, "Error while processing request from {Address}", address)</example>
-		public static void LogTrace<TState>(this ILogger logger, Exception exception, string message,
-			params object[] args)
+		public static void LogTrace<TState>(this ILogger logger, Exception exception, string message, params object[] args)
 		{
-			logger.ThrowIfNull();
 			logger.Log<TState>(LogLevel.Trace, exception, message, args);
 		}
 
@@ -265,7 +213,6 @@ namespace DTech.Logging
 		/// <example>logger.LogTrace("Processing request from {Address}", address)</example>
 		public static void LogTrace<TState>(this ILogger logger, string message, params object[] args)
 		{
-			logger.ThrowIfNull();
 			logger.Log<TState>(LogLevel.Trace, message, args);
 		}
 		
@@ -288,7 +235,6 @@ namespace DTech.Logging
 		/// <example>logger.LogWarning(exception, "Error while processing request from {Address}", address)</example>
 		public static void LogWarning<TState>(this ILogger logger, Exception exception, string message, params object[] args)
 		{
-			logger.ThrowIfNull();
 			logger.Log<TState>(LogLevel.Warning, exception, message, args);
 		}
 
@@ -300,7 +246,6 @@ namespace DTech.Logging
 		/// <example>logger.LogWarning("Processing request from {Address}", address)</example>
 		public static void LogWarning<TState>(this ILogger logger, string message, params object[] args)
 		{
-			logger.ThrowIfNull();
 			logger.Log<TState>(LogLevel.Warning, message, args);
 		}
 		
@@ -312,14 +257,6 @@ namespace DTech.Logging
 		public static void LogWarning(this ILogger logger, string message, params object[] args)
 		{
 			logger.LogWarning<NullState>(message, args);
-		}
-
-		internal static void ThrowIfNull(this ILogger logger)
-		{
-			if (logger == null)
-			{
-				throw new ArgumentNullException(nameof(logger));
-			}
 		}
 	}
 }

@@ -14,7 +14,7 @@ namespace DTech.Logging.Editor
 		
 		public static bool IsEditorLogWriterEnabled
 		{
-			get => EditorPrefs.GetBool(EditorLogWritingSaveKey, true);
+			get => EditorPrefs.GetBool(EditorLogWritingSaveKey, false);
 			private set => EditorPrefs.SetBool(EditorLogWritingSaveKey, value);
 		}
 		
