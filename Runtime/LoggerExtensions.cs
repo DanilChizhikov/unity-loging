@@ -35,26 +35,7 @@ namespace DTech.Logging
 		public static void Log<TState>(this ILogger logger, LogLevel logLevel, Exception exception, string message, params object[] args)
 		{
 			logger.ThrowIfNull();
-			logger.Log<TState>(logLevel, exception, Formatter);
-
-			string Formatter(Exception ex)
-			{
-				bool hasException = ex != null;
-				int lenght = hasException ? args.Length + 1 : args.Length;
-				object[] param = new object[lenght];
-				if (hasException)
-				{
-					param[0] = ex.ToString();
-				}
-				
-				for (int i = 0; i < args.Length; i++)
-				{
-					int paramIndex = hasException ? i + 1 : i;
-					param[paramIndex] = args[i];
-				}
-				
-				return string.Format(message, param);
-			}
+			logger.Log<TState>(logLevel, exception, message, args);
 		}
 
 		/// <summary>
@@ -68,17 +49,7 @@ namespace DTech.Logging
 		public static void Log<TState>(this ILogger logger, LogLevel logLevel, string message, params object[] args)
 		{
 			logger.ThrowIfNull();
-			logger.Log<TState>(logLevel, null, Formatter);
-
-			string Formatter(Exception ex)
-			{
-				if (args.Length == 0)
-				{
-					return message;
-				}
-				
-				return string.Format(message, args);
-			}
+			logger.Log<TState>(logLevel, null, message, args);
 		}
 		
 		/// <summary>
@@ -91,16 +62,7 @@ namespace DTech.Logging
 		public static void Log(this ILogger logger, LogLevel logLevel, string message, params object[] args)
 		{
 			logger.ThrowIfNull();
-			logger.Log<NullState>(logLevel, null, Formatter);
-			string Formatter(Exception ex)
-			{
-				if (args.Length == 0)
-				{
-					return message;
-				}
-				
-				return string.Format(message, args);
-			}
+			logger.Log<NullState>(logLevel, null, message, args);
 		}
 
 		/// <summary>Formats and writes a critical log message.</summary>

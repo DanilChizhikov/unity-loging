@@ -16,10 +16,10 @@ namespace DTech.Logging.Tests.Performance
             return logLevel != LogLevel.None;
         }
 
-        protected override void SendLog<TState>(LogLevel logLevel, Exception exception, Func<Exception, string> formatter, string scopes)
-        {
-            string logBody = formatter(exception);
-            string stateName = typeof(TState).Name;
+	        protected override void SendLog<TState>(LogLevel logLevel, Exception exception, string message, object[] args, string scopes)
+	        {
+	            string logBody = FormatMessage(exception, message, args);
+	            string stateName = typeof(TState).Name;
             LineBuilder.Reset();
             string log = LineBuilder.SetLogLevel(logLevel)
                 .SetScopes(scopes)

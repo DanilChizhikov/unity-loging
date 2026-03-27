@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Threading;
 
@@ -38,7 +39,7 @@ namespace DTech.Logging
 
 		public abstract bool IsEnabled(LogLevel logLevel);
 
-		public void Log<TState>(LogLevel logLevel, Exception exception, Func<Exception, string> formatter)
+		public void Log<TState>(LogLevel logLevel, Exception exception, string message, object[] args)
 		{
 			_scopes.Clear();
 			LogScope current = CurrentScope.Value;
@@ -55,9 +56,46 @@ namespace DTech.Logging
 				scopes = string.Format(ScopeFormat, string.Join(ScopesSeparator, _scopes));
 			}
 			
-			SendLog<TState>(logLevel, exception, formatter, scopes);
+			SendLog<TState>(logLevel, exception, message, args, scopes);
 		}
 
-		protected abstract void SendLog<TState>(LogLevel logLevel, Exception exception, Func<Exception, string> formatter, string scopes);
+		protected static string FormatMessage(Exception exception, string message, object[] args)
+		{
+			if (args == null || args.Length == 0)
+			{
+				if (exception == null)
+				{
+					return message;
+				}
+
+				return string.Format(message, exception.ToString());
+			}
+
+			if (exception == null)
+			{
+				return string.Format(message, args);
+			}
+
+			string exceptionString = exception.ToString();
+			int length = args.Length + 1;
+			object[] pooledArgs = ArrayPool<object>.Shared.Rent(length);
+			try
+			{
+				pooledArgs[0] = exceptionString;
+				for (int i = 0; i < args.Length; i++)
+				{
+					pooledArgs[i + 1] = args[i];
+				}
+
+				return string.Format(message, pooledArgs);
+			}
+			finally
+			{
+				Array.Clear(pooledArgs, 0, length);
+				ArrayPool<object>.Shared.Return(pooledArgs);
+			}
+		}
+
+		protected abstract void SendLog<TState>(LogLevel logLevel, Exception exception, string message, object[] args, string scopes);
 	}
 }

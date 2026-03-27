@@ -21,9 +21,9 @@ namespace DTech.Logging
 			return LoggerSettings.Instance.IsEnabled(logLevel);
 		}
 
-		protected override void SendLog<TState>(LogLevel logLevel, Exception exception, Func<Exception, string> formatter, string scopes)
+		protected override void SendLog<TState>(LogLevel logLevel, Exception exception, string message, object[] args, string scopes)
 		{
-			string logBody = formatter(exception);
+			string logBody = FormatMessage(exception, message, args);
 			string stateName = typeof(TState).Name;
 			LineBuilder.Reset();
 			LineBuilder.SetLogLevel(logLevel)

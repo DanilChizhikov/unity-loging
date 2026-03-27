@@ -22,13 +22,14 @@ namespace DTech.Logging
 		/// <returns><c>true</c> if enabled.</returns>
 		bool IsEnabled(LogLevel logLevel);
 
-		/// <summary>Writes a log entry.</summary>
-		/// <param name="logLevel">Entry will be written on this level.</param>
-		/// <param name="exception">The exception related to this entry.</param>
-		/// <param name="formatter">Function to create a <see cref="T:System.String" /> message of the <paramref name="exception" />.</param>
-		/// <typeparam name="TState">The type of the object to be written.</typeparam>
-		void Log<TState>(LogLevel logLevel, Exception exception, Func<Exception, string> formatter);
-	}
+			/// <summary>Writes a log entry.</summary>
+			/// <param name="logLevel">Entry will be written on this level.</param>
+			/// <param name="exception">The exception related to this entry.</param>
+			/// <param name="message">Format string of the log message.</param>
+			/// <param name="args">An object array that contains zero or more objects to format.</param>
+			/// <typeparam name="TState">The type of the object to be written.</typeparam>
+			void Log<TState>(LogLevel logLevel, Exception exception, string message, object[] args);
+		}
 
 	public interface ILogger<TCategoryName> : ILogger
 	{

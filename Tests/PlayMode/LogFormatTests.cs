@@ -109,5 +109,20 @@ namespace DTech.Logging.Tests
             
             LogAssert.Expect(LogType.Log, Expected);
         }
+
+		[Test]
+		public void Log_WithDateTimePlacement_ReplacesWithCurrentYear()
+		{
+			_settingsWrapper.ResetSettings()
+				.OverrideFileLoggingEnabled(false)
+				.OverrideConsoleFormatString("[DATE_TIME:yyyy]");
+
+			var logger = new Logger<LogFormatTests>();
+			string expected = $"[{DateTime.Now:yyyy}] Date test";
+
+			logger.LogInfo("Date test");
+
+			LogAssert.Expect(LogType.Log, expected);
+		}
     }
 }
