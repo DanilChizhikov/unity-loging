@@ -10,13 +10,11 @@ namespace DTech.Logging.Tests.Performance
     internal sealed class LoggerStressTests
     {
         private ILogger _logger;
-        private ILogger<LoggerStressTests> _genericLogger;
 
         [SetUp]
         public void SetUp()
         {
             _logger = LoggerFactory.CreateLogger("StressTest");
-            _genericLogger = LoggerFactory.CreateLogger<LoggerStressTests>();
             LogAssert.ignoreFailingMessages = true;
         }
 
