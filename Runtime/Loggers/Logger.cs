@@ -4,15 +4,16 @@ namespace DTech.Logging
 {
 	public sealed class Logger : ILogger
 	{
-		private readonly InternalLoggerBase[] _loggers;
+		private readonly ILogger[] _loggers;
 
 		public Logger(string tag)
 		{
-			_loggers = new InternalLoggerBase[]
-			{
-				new UnityLogger(tag),
-				new FileLogger(tag)
-			};
+			_loggers = LoggerUtility.GetDefaultLoggers(tag);
+		}
+
+		public Logger(string tag, params ILogger[] loggers)
+		{
+			_loggers = loggers ?? LoggerUtility.GetDefaultLoggers(tag);
 		}
 
 		public IDisposable BeginScope<TState>()
@@ -25,7 +26,7 @@ namespace DTech.Logging
 			var scopes = new IDisposable[_loggers.Length];
 			for (int i = 0; i < _loggers.Length; i++)
 			{
-				InternalLoggerBase logger = _loggers[i];
+				ILogger logger = _loggers[i];
 				scopes[i] = logger.BeginScope(state);
 			}
 
@@ -41,7 +42,7 @@ namespace DTech.Logging
 		{
 			for (int i = 0; i < _loggers.Length; i++)
 			{
-				InternalLoggerBase logger = _loggers[i];
+				ILogger logger = _loggers[i];
 				if (logger.IsEnabled(logLevel))
 				{
 					return true;
@@ -55,7 +56,7 @@ namespace DTech.Logging
 		{
 			for (int i = 0; i < _loggers.Length; i++)
 			{
-				InternalLoggerBase logger = _loggers[i];
+				ILogger logger = _loggers[i];
 				if (logger.IsEnabled(logLevel))
 				{
 					logger.Log<TState>(logLevel, exception, formatter);
@@ -71,6 +72,11 @@ namespace DTech.Logging
 		public Logger()
 		{
 			_logger = new Logger(typeof(TCategoryName).Name);
+		}
+
+		public Logger(params ILogger[] loggers)
+		{
+			_logger = new Logger(typeof(TCategoryName).Name, loggers);
 		}
 		
 		public IDisposable BeginScope<TState>()

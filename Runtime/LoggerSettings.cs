@@ -16,15 +16,18 @@ namespace DTech.Logging
 			{
 				lock (_lockObject)
 				{
-					if (_instance == null)
+					if (!_hasInstance)
 					{
 						_instance = Resources.Load<LoggerSettings>(nameof(LoggerSettings));
+						_hasInstance = true;
 					}
 				}
 				
 				return _instance;
 			}
 		}
+
+		private static bool _hasInstance = false;
 		
 		[SerializeField] private bool _isTraceEnabled = false;
 		[SerializeField] private bool _isDebugEnabled = false;
