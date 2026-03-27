@@ -5,11 +5,10 @@ namespace DTech.Logging
 	public interface ILogger
 	{
 		/// <summary>Begins a logical operation scope.</summary>
-		/// <param name="state">The identifier for the scope.</param>
 		/// <typeparam name="TState">The type of the state to begin scope for.</typeparam>
 		/// <returns>An <see cref="T:System.IDisposable" /> that ends the logical operation scope on dispose.</returns>
 		IDisposable BeginScope<TState>();
-		
+
 		/// <summary>Begins a logical operation scope.</summary>
 		/// <param name="state">The identifier for the scope.</param>
 		/// <returns>An <see cref="T:System.IDisposable" /> that ends the logical operation scope on dispose.</returns>
@@ -22,14 +21,14 @@ namespace DTech.Logging
 		/// <returns><c>true</c> if enabled.</returns>
 		bool IsEnabled(LogLevel logLevel);
 
-			/// <summary>Writes a log entry.</summary>
-			/// <param name="logLevel">Entry will be written on this level.</param>
-			/// <param name="exception">The exception related to this entry.</param>
-			/// <param name="message">Format string of the log message.</param>
-			/// <param name="args">An object array that contains zero or more objects to format.</param>
-			/// <typeparam name="TState">The type of the object to be written.</typeparam>
-			void Log<TState>(LogLevel logLevel, Exception exception, string message, object[] args);
-		}
+		/// <summary>Writes a log entry.</summary>
+		/// <param name="logLevel">Entry will be written on this level.</param>
+		/// <param name="exception">The exception related to this entry.</param>
+		/// <param name="message">Format string of the log message.</param>
+		/// <param name="args">An object array that contains zero or more objects to format.</param>
+		/// <typeparam name="TState">The type of the object to be written.</typeparam>
+		void Log<TState>(LogLevel logLevel, Exception exception, string message, object[] args);
+	}
 
 	public interface ILogger<TCategoryName> : ILogger
 	{

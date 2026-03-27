@@ -157,7 +157,7 @@ namespace DTech.Logging
 			{
 				bool hasOpeningBracket = index > 0 && template[index - 1] == '[';
 				bool hasClosingBracket = index + token.Length < template.Length && template[index + token.Length] == ']';
-				if (hasOpeningBracket && hasClosingBracket && builder.Length > 0 && builder[builder.Length - 1] == '[')
+				if (hasOpeningBracket && hasClosingBracket && builder.Length > 0 && builder[^1] == '[')
 				{
 					builder.Length--;
 					index += token.Length;
