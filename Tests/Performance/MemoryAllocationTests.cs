@@ -1,12 +1,14 @@
 using NUnit.Framework;
 using Unity.PerformanceTesting;
 using UnityEngine.TestTools;
+using System;
 
 namespace DTech.Logging.Tests.Performance
 {
     [TestFixture]
     internal sealed class MemoryAllocationTests
     {
+        private static readonly object[] _emptyArgs = Array.Empty<object>();
         private ILogger _logger;
 
         [SetUp]
@@ -26,6 +28,39 @@ namespace DTech.Logging.Tests.Performance
         public void LogInfo_NoArgs_ZeroAllocations()
         {
             Measure.Method(() => { _logger.LogInfo("Simple message without arguments"); })
+                .WarmupCount(10)
+                .MeasurementCount(50)
+                .IterationsPerMeasurement(1000)
+                .GC()
+                .Run();
+        }
+
+        [Test, Performance]
+        public void LogInfo_NoArgs_ParamsEmptyArray_Allocations()
+        {
+            Measure.Method(() => { _logger.LogInfo("Simple message without arguments", _emptyArgs); })
+                .WarmupCount(10)
+                .MeasurementCount(50)
+                .IterationsPerMeasurement(1000)
+                .GC()
+                .Run();
+        }
+
+        [Test, Performance]
+        public void Log_GenericNoArgs_ZeroAllocations()
+        {
+            Measure.Method(() => { _logger.Log<NullState>(LogLevel.Information, "Simple message without arguments"); })
+                .WarmupCount(10)
+                .MeasurementCount(50)
+                .IterationsPerMeasurement(1000)
+                .GC()
+                .Run();
+        }
+
+        [Test, Performance]
+        public void Log_GenericNoArgs_ParamsEmptyArray_Allocations()
+        {
+            Measure.Method(() => { _logger.Log<NullState>(LogLevel.Information, "Simple message without arguments", _emptyArgs); })
                 .WarmupCount(10)
                 .MeasurementCount(50)
                 .IterationsPerMeasurement(1000)

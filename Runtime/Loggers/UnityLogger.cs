@@ -5,11 +5,11 @@ namespace DTech.Logging
 {
 	internal sealed class UnityLogger : InternalLoggerBase
 	{
-		private static readonly LogLineBuilder _lineBuilder =
-			new(LoggerSettings.Instance.ConsoleFormatString, LoggerSettings.Instance.PlacementReplacers);
+		private readonly LogLineBuilder _lineBuilder;
 		
 		public UnityLogger(string tag) : base(tag)
 		{
+			_lineBuilder = new LogLineBuilder(LoggerSettings.Instance.ConsoleFormatString, LoggerSettings.Instance.PlacementReplacers);
 		}
 
 		public override bool IsEnabled(LogLevel logLevel)

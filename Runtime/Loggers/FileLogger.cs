@@ -6,11 +6,11 @@ namespace DTech.Logging
 {
 	internal sealed class FileLogger : InternalLoggerBase
 	{
-		private static readonly LogLineBuilder _lineBuilder =
-			new(LoggerSettings.Instance.FileFormatString, LoggerSettings.Instance.PlacementReplacers);
+		private readonly LogLineBuilder _lineBuilder;
 		
 		public FileLogger(string tag) : base(tag)
 		{
+			_lineBuilder = new LogLineBuilder(LoggerSettings.Instance.FileFormatString, LoggerSettings.Instance.PlacementReplacers);
 		}
 
 		public override bool IsEnabled(LogLevel logLevel)

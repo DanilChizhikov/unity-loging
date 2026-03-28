@@ -33,9 +33,8 @@ namespace DTech.Logging.Tests
             _settingsWrapper.ResetSettings()
                 .OverrideFileLoggingEnabled(false);
             
-            logger.LogInfo(Message);
-            
             LogAssert.Expect(LogType.Log, Expected);
+            logger.LogInfo(Message);
         }
 
         [Test]
@@ -58,11 +57,10 @@ namespace DTech.Logging.Tests
                 scope = logger.BeginScope("TestScope");
             }
             
-            logger.LogInfo(message);
-            
-            scope?.Dispose();
-            
             LogAssert.Expect(LogType.Log, expectedStart);
+            
+            logger.LogInfo(message);
+            scope?.Dispose();
         }
 
         [Test]
@@ -81,14 +79,14 @@ namespace DTech.Logging.Tests
             var logger = new Logger<LogFormatTests>();
             
             
-            logger.LogInfo("Info message");
             LogAssert.Expect(LogType.Log, ExpectedInfo);
+            logger.LogInfo("Info message");
             
-            logger.LogWarning("Warning message");
             LogAssert.Expect(LogType.Warning, ExpectedWarning);
+            logger.LogWarning("Warning message");
             
-            logger.LogError("Error message");
             LogAssert.Expect(LogType.Error, ExpectedError);
+            logger.LogError("Error message");
         }
 
         [Test]
@@ -104,10 +102,9 @@ namespace DTech.Logging.Tests
             
             using (logger.BeginScope("TestScope"))
             {
+                LogAssert.Expect(LogType.Log, Expected);
                 logger.LogInfo("Scoped message");
             }
-            
-            LogAssert.Expect(LogType.Log, Expected);
         }
 
 		[Test]
@@ -120,9 +117,8 @@ namespace DTech.Logging.Tests
 			var logger = new Logger<LogFormatTests>();
 			string expected = $"[{DateTime.Now:yyyy}] Date test";
 
-			logger.LogInfo("Date test");
-
 			LogAssert.Expect(LogType.Log, expected);
+			logger.LogInfo("Date test");
 		}
     }
 }

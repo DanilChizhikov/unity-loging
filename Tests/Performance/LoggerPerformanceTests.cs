@@ -1,11 +1,14 @@
 using NUnit.Framework;
 using Unity.PerformanceTesting;
+using System;
 
 namespace DTech.Logging.Tests.Performance
 {
     [TestFixture]
     internal sealed class LoggerPerformanceTests
     {
+        private static readonly object[] _emptyArgs = Array.Empty<object>();
+        
         private ILogger _logger;
 
         [SetUp]
@@ -23,6 +26,36 @@ namespace DTech.Logging.Tests.Performance
         public void LogInfo_SimpleMessage_Performance()
         {
             Measure.Method(() => { _logger.LogInfo("Simple message"); })
+                .WarmupCount(10)
+                .MeasurementCount(100)
+                .IterationsPerMeasurement(100)
+                .Run();
+        }
+
+        [Test, Performance]
+        public void LogInfo_SimpleMessage_ParamsEmptyArray_Performance()
+        {
+            Measure.Method(() => { _logger.LogInfo("Simple message", _emptyArgs); })
+                .WarmupCount(10)
+                .MeasurementCount(100)
+                .IterationsPerMeasurement(100)
+                .Run();
+        }
+
+        [Test, Performance]
+        public void Log_GenericSimpleMessage_Performance()
+        {
+            Measure.Method(() => { _logger.Log<NullState>(LogLevel.Information, "Simple message"); })
+                .WarmupCount(10)
+                .MeasurementCount(100)
+                .IterationsPerMeasurement(100)
+                .Run();
+        }
+
+        [Test, Performance]
+        public void Log_GenericSimpleMessage_ParamsEmptyArray_Performance()
+        {
+            Measure.Method(() => { _logger.Log<NullState>(LogLevel.Information, "Simple message", _emptyArgs); })
                 .WarmupCount(10)
                 .MeasurementCount(100)
                 .IterationsPerMeasurement(100)
