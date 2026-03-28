@@ -106,6 +106,31 @@ namespace DTech.Logging.Tests
 			Assert.AreEqual(nameof(NullState), logger.LastStateTypeName);
 			Assert.AreEqual("User Alice logged in", logger.LastFormattedMessage);
 		}
+
+		[Test]
+		public void LogInfo_WithoutArgs_UsesNoArgsOverload()
+		{
+			var logger = new CapturingLogger();
+
+			logger.LogInfo("Plain message");
+
+			Assert.AreEqual(0, logger.ArgsOverloadCalls);
+			Assert.AreEqual(1, logger.NoArgsOverloadCalls);
+			Assert.AreEqual("Plain message", logger.LastFormattedMessage);
+		}
+
+		[Test]
+		public void Log_WithException_WithoutArgs_UsesNoArgsOverload()
+		{
+			var logger = new CapturingLogger();
+			var ex = new InvalidOperationException("Boom");
+
+			logger.Log<LoggerExtensionsTests>(LogLevel.Error, ex, "Error: {0}");
+
+			Assert.AreEqual(0, logger.ArgsOverloadCalls);
+			Assert.AreEqual(1, logger.NoArgsOverloadCalls);
+			Assert.AreEqual($"Error: {ex}", logger.LastFormattedMessage);
+		}
 		
 		[Test]
 		public void LogCritical_WithException_UsesCriticalLevel()
@@ -226,6 +251,8 @@ namespace DTech.Logging.Tests
 			public string LastFormattedMessage { get; private set; }
 			public string LastStateTypeName { get; private set; }
 			public string LastScopeState { get; private set; }
+			public int ArgsOverloadCalls { get; private set; }
+			public int NoArgsOverloadCalls { get; private set; }
 
 			public IDisposable BeginScope<TState>()
 			{
@@ -243,33 +270,43 @@ namespace DTech.Logging.Tests
 				return true;
 			}
 
-				public void Log<TState>(LogLevel logLevel, Exception exception, string message, object[] args)
+			public void Log<TState>(LogLevel logLevel, Exception exception, string message, object[] args)
+			{
+				ArgsOverloadCalls++;
+				LastLogLevel = logLevel;
+				LastException = exception;
+				LastStateTypeName = typeof(TState).Name;
+				if (exception == null)
 				{
-					LastLogLevel = logLevel;
-					LastException = exception;
-					LastStateTypeName = typeof(TState).Name;
-					if (exception == null)
-					{
-						LastFormattedMessage = args is { Length: > 0 } ? string.Format(message, args) : message;
-						return;
-					}
-
-					if (args == null || args.Length == 0)
-					{
-						LastFormattedMessage = string.Format(message, exception.ToString());
-						return;
-					}
-
-					var formatArgs = new object[args.Length + 1];
-					formatArgs[0] = exception.ToString();
-					for (int i = 0; i < args.Length; i++)
-					{
-						formatArgs[i + 1] = args[i];
-					}
-
-					LastFormattedMessage = string.Format(message, formatArgs);
+					LastFormattedMessage = args is { Length: > 0 } ? string.Format(message, args) : message;
+					return;
 				}
+
+				if (args == null || args.Length == 0)
+				{
+					LastFormattedMessage = string.Format(message, exception.ToString());
+					return;
+				}
+
+				var formatArgs = new object[args.Length + 1];
+				formatArgs[0] = exception.ToString();
+				for (int i = 0; i < args.Length; i++)
+				{
+					formatArgs[i + 1] = args[i];
+				}
+
+				LastFormattedMessage = string.Format(message, formatArgs);
 			}
+
+			public void Log<TState>(LogLevel logLevel, Exception exception, string message)
+			{
+				NoArgsOverloadCalls++;
+				LastLogLevel = logLevel;
+				LastException = exception;
+				LastStateTypeName = typeof(TState).Name;
+				LastFormattedMessage = exception == null ? message : string.Format(message, exception.ToString());
+			}
+		}
 
 		[Serializable]
 		private class JsonObject

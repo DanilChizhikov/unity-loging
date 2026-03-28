@@ -28,6 +28,13 @@ namespace DTech.Logging
 		/// <param name="args">An object array that contains zero or more objects to format.</param>
 		/// <typeparam name="TState">The type of the object to be written.</typeparam>
 		void Log<TState>(LogLevel logLevel, Exception exception, string message, object[] args);
+
+		/// <summary>Writes a log entry without formatting arguments.</summary>
+		/// <param name="logLevel">Entry will be written on this level.</param>
+		/// <param name="exception">The exception related to this entry.</param>
+		/// <param name="message">Plain log message.</param>
+		/// <typeparam name="TState">The type of the object to be written.</typeparam>
+		void Log<TState>(LogLevel logLevel, Exception exception, string message);
 	}
 
 	public interface ILogger<TCategoryName> : ILogger

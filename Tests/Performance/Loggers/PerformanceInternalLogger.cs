@@ -4,9 +4,6 @@ namespace DTech.Logging.Tests.Performance
 {
     internal sealed class PerformanceInternalLogger : InternalLoggerBase
     {
-        protected override LogLineBuilder LineBuilder { get; } =
-            new(LoggerSettings.Instance.ConsoleFormatString, LoggerSettings.Instance.PlacementReplacers);
-
         public PerformanceInternalLogger(string tag) : base(tag)
         {
         }
@@ -16,19 +13,38 @@ namespace DTech.Logging.Tests.Performance
             return logLevel != LogLevel.None;
         }
 
-	        protected override void SendLog<TState>(LogLevel logLevel, Exception exception, string message, object[] args, string scopes)
-	        {
-	            string logBody = FormatMessage(exception, message, args);
-	            string stateName = typeof(TState).Name;
-            LineBuilder.Reset();
-            string log = LineBuilder.SetLogLevel(logLevel)
+        protected override void SendLog<TState>(LogLevel logLevel, Exception exception, string message, object[] args, string scopes)
+        {
+            LoggerSettings settings = LoggerSettings.Instance;
+            LogLineBuilder lineBuilder = GetOrCreateLineBuilder(settings.ConsoleFormatString, settings.PlacementReplacers);
+            string logBody = FormatMessage(exception, message, args);
+            string stateName = typeof(TState).Name;
+            lineBuilder.Reset();
+            string log = lineBuilder.SetLogLevel(logLevel)
                 .SetScopes(scopes)
                 .SetTag(Tag)
                 .SetStateName(stateName)
                 .SetBody(logBody)
                 .ToString();
-            
-            LineBuilder.Reset();
+
+            lineBuilder.Reset();
+        }
+
+        protected override void SendLog<TState>(LogLevel logLevel, Exception exception, string message, string scopes)
+        {
+            LoggerSettings settings = LoggerSettings.Instance;
+            LogLineBuilder lineBuilder = GetOrCreateLineBuilder(settings.ConsoleFormatString, settings.PlacementReplacers);
+            string logBody = FormatMessage(exception, message);
+            string stateName = typeof(TState).Name;
+            lineBuilder.Reset();
+            string log = lineBuilder.SetLogLevel(logLevel)
+                .SetScopes(scopes)
+                .SetTag(Tag)
+                .SetStateName(stateName)
+                .SetBody(logBody)
+                .ToString();
+
+            lineBuilder.Reset();
         }
     }
 }

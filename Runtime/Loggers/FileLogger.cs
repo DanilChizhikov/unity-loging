@@ -6,9 +6,6 @@ namespace DTech.Logging
 {
 	internal sealed class FileLogger : InternalLoggerBase
 	{
-		protected override LogLineBuilder LineBuilder { get; } =
-			new(LoggerSettings.Instance.FileFormatString, LoggerSettings.Instance.PlacementReplacers);
-		
 		public FileLogger(string tag) : base(tag)
 		{
 		}
@@ -26,19 +23,37 @@ namespace DTech.Logging
 			}
 			
 			string logBody = FormatMessage(exception, message, args);
+			SendLog<TState>(logLevel, logBody, scopes);
+		}
+
+		protected override void SendLog<TState>(LogLevel logLevel, Exception exception, string message, string scopes)
+		{
+			if (!IsLogEnabled())
+			{
+				return;
+			}
+
+			string logBody = FormatMessage(exception, message);
+			SendLog<TState>(logLevel, logBody, scopes);
+		}
+		
+		private bool IsLogEnabled() => !Application.isEditor && LoggerSettings.Instance.IsFileLoggingEnabled;
+
+		private void SendLog<TState>(LogLevel logLevel, string message, string scopes)
+		{
+			LoggerSettings settings = LoggerSettings.Instance;
+			LogLineBuilder lineBuilder = GetOrCreateLineBuilder(settings.FileFormatString, settings.PlacementReplacers);
 			string stateName = typeof(TState).Name;
-			LineBuilder.Reset();
-			LineBuilder.SetLogLevel(logLevel)
+			lineBuilder.Reset();
+			lineBuilder.SetLogLevel(logLevel)
 				.SetScopes(scopes)
 				.SetTag(Tag)
 				.SetStateName(stateName)
-				.SetBody(logBody);
-			
-			using var stream = new StreamWriter(LoggerFileProvider.CurrentLogFilePath, true);
-			stream.WriteLine(LineBuilder.ToString());
-			LineBuilder.Reset();
-		}
+				.SetBody(message);
 
-		private bool IsLogEnabled() => !Application.isEditor && LoggerSettings.Instance.IsFileLoggingEnabled;
+			using var stream = new StreamWriter(LoggerFileProvider.CurrentLogFilePath, true);
+			stream.WriteLine(lineBuilder.ToString());
+			lineBuilder.Reset();
+		}
 	}
 }

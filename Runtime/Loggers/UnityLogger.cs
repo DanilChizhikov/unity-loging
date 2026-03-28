@@ -5,9 +5,6 @@ namespace DTech.Logging
 {
 	internal sealed class UnityLogger : InternalLoggerBase
 	{
-		protected override LogLineBuilder LineBuilder { get; } =
-			new(LoggerSettings.Instance.ConsoleFormatString, LoggerSettings.Instance.PlacementReplacers);
-		
 		public UnityLogger(string tag) : base(tag)
 		{
 		}
@@ -24,16 +21,29 @@ namespace DTech.Logging
 		protected override void SendLog<TState>(LogLevel logLevel, Exception exception, string message, object[] args, string scopes)
 		{
 			string logBody = FormatMessage(exception, message, args);
+			SendLog<TState>(logLevel, logBody, scopes);
+		}
+
+		protected override void SendLog<TState>(LogLevel logLevel, Exception exception, string message, string scopes)
+		{
+			string logBody = FormatMessage(exception, message);
+			SendLog<TState>(logLevel, logBody, scopes);
+		}
+
+		private void SendLog<TState>(LogLevel logLevel, string message, string scopes)
+		{
+			LoggerSettings settings = LoggerSettings.Instance;
+			LogLineBuilder lineBuilder = GetOrCreateLineBuilder(settings.ConsoleFormatString, settings.PlacementReplacers);
 			string stateName = typeof(TState).Name;
-			LineBuilder.Reset();
-			LineBuilder.SetLogLevel(logLevel)
+			lineBuilder.Reset();
+			lineBuilder.SetLogLevel(logLevel)
 				.SetScopes(scopes)
 				.SetTag(Tag)
 				.SetStateName(stateName)
-				.SetBody(logBody);
+				.SetBody(message);
 
-			string log = LineBuilder.ToString();
-			LineBuilder.Reset();
+			string log = lineBuilder.ToString();
+			lineBuilder.Reset();
 			switch (logLevel)
 			{
 				case LogLevel.None:
