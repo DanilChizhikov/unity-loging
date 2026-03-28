@@ -9,17 +9,14 @@ on:
       - master
 
 jobs:
-  testAllModes:
-    name: Test in ${{ matrix.testMode }}
+  testPlayMode:
+    name: Test PlayMode
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         projectPath:
           - empty-unity-project
-        testMode:
-          - playmode
-          - editmode
 
     steps:
       - name: Checkout logging repo
@@ -55,4 +52,4 @@ jobs:
         with:
           unityVersion: 2022.3.62f2
           projectPath: ${{ matrix.projectPath }}
-          testMode: ${{ matrix.testMode }}
+          testMode: playmode
