@@ -65,7 +65,7 @@ namespace DTech.Logging.Tests
 		
 		private sealed class CapturingFileLogger : InternalLoggerBase
 		{
-			protected override LogLineBuilder LineBuilder { get; }
+			private LogLineBuilder LineBuilder { get; }
 			
 			public CapturingFileLogger(string tag, string logTemplate) : base(tag)
 			{

@@ -6,7 +6,7 @@ namespace DTech.Logging
 {
 	internal sealed class FileLogger : InternalLoggerBase
 	{
-		protected override LogLineBuilder LineBuilder { get; } =
+		private static readonly LogLineBuilder _lineBuilder =
 			new(LoggerSettings.Instance.FileFormatString, LoggerSettings.Instance.PlacementReplacers);
 		
 		public FileLogger(string tag) : base(tag)
@@ -27,16 +27,16 @@ namespace DTech.Logging
 			
 			string logBody = FormatMessage(exception, message, args);
 			string stateName = typeof(TState).Name;
-			LineBuilder.Reset();
-			LineBuilder.SetLogLevel(logLevel)
+			_lineBuilder.Reset();
+			_lineBuilder.SetLogLevel(logLevel)
 				.SetScopes(scopes)
 				.SetTag(Tag)
 				.SetStateName(stateName)
 				.SetBody(logBody);
 			
 			using var stream = new StreamWriter(LoggerFileProvider.CurrentLogFilePath, true);
-			stream.WriteLine(LineBuilder.ToString());
-			LineBuilder.Reset();
+			stream.WriteLine(_lineBuilder.ToString());
+			_lineBuilder.Reset();
 		}
 
 		private bool IsLogEnabled() => !Application.isEditor && LoggerSettings.Instance.IsFileLoggingEnabled;

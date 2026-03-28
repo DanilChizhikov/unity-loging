@@ -1,6 +1,6 @@
 using System;
 using System.Buffers;
-using System.Collections.Generic;
+using System.Text;
 using System.Threading;
 
 namespace DTech.Logging
@@ -8,20 +8,15 @@ namespace DTech.Logging
 	internal abstract class InternalLoggerBase : ILogger
 	{
 		private const string ScopesSeparator = " > ";
-		private const string ScopeFormat = "Scope > {0}";
-		
-		private readonly List<string> _scopes;
+		private const string ScopePrefix = "Scope > ";
 		
 		internal AsyncLocal<LogScope> CurrentScope { get; }
 		
 		protected string Tag { get; }
-		protected string NullStateName => nameof(NullState);
-		protected abstract LogLineBuilder LineBuilder { get; }
 
 		public InternalLoggerBase(string tag)
 		{
 			Tag = tag;
-			_scopes = new List<string>();
 			CurrentScope = new AsyncLocal<LogScope>();
 		}
 		
@@ -41,24 +36,12 @@ namespace DTech.Logging
 
 		public void Log<TState>(LogLevel logLevel, Exception exception, string message, object[] args)
 		{
-			_scopes.Clear();
-			LogScope current = CurrentScope.Value;
-			while (current != null)
-			{
-				_scopes.Add(current.Name);
-				current = current.Parent;
-			}
-			
-			_scopes.Reverse();
-			string scopes = string.Empty;
-			if (_scopes.Count > 0)
-			{
-				scopes = string.Format(ScopeFormat, string.Join(ScopesSeparator, _scopes));
-			}
-			
+			string scopes = BuildScopesString(CurrentScope.Value);
 			SendLog<TState>(logLevel, exception, message, args, scopes);
 		}
-
+		
+		protected abstract void SendLog<TState>(LogLevel logLevel, Exception exception, string message, object[] args, string scopes);
+		
 		protected static string FormatMessage(Exception exception, string message, object[] args)
 		{
 			if (args == null || args.Length == 0)
@@ -73,10 +56,83 @@ namespace DTech.Logging
 
 			if (exception == null)
 			{
-				return string.Format(message, args);
+				return FormatMessageWithoutException(message, args);
 			}
 
+			return FormatMessageWithException(message, exception, args);
+		}
+
+		private static string BuildScopesString(LogScope current)
+		{
+			if (current == null)
+			{
+				return string.Empty;
+			}
+
+			int scopeCount = 0;
+			LogScope traversal = current;
+			while (traversal != null)
+			{
+				scopeCount++;
+				traversal = traversal.Parent;
+			}
+
+			string[] names = ArrayPool<string>.Shared.Rent(scopeCount);
+			int index = scopeCount;
+			int totalNamesLength = 0;
+			traversal = current;
+			while (traversal != null)
+			{
+				string name = traversal.Name;
+				names[--index] = name;
+				totalNamesLength += name.Length;
+				traversal = traversal.Parent;
+			}
+
+			int totalLength = ScopePrefix.Length + totalNamesLength + (scopeCount - 1) * ScopesSeparator.Length;
+			var builder = new StringBuilder(totalLength);
+			builder.Append(ScopePrefix);
+			for (int i = 0; i < scopeCount; i++)
+			{
+				if (i > 0)
+				{
+					builder.Append(ScopesSeparator);
+				}
+
+				builder.Append(names[i]);
+			}
+
+			string log = builder.ToString();
+			Array.Clear(names, 0, scopeCount);
+			ArrayPool<string>.Shared.Return(names);
+
+			return log;
+		}
+
+		private static string FormatMessageWithoutException(string message, object[] args)
+		{
+			return args.Length switch
+			{
+				1 => string.Format(message, args[0]),
+				2 => string.Format(message, args[0], args[1]),
+				3 => string.Format(message, args[0], args[1], args[2]),
+				_ => string.Format(message, args),
+			};
+		}
+
+		private static string FormatMessageWithException(string message, Exception exception, object[] args)
+		{
 			string exceptionString = exception.ToString();
+			if (args.Length == 1)
+			{
+				return string.Format(message, exceptionString, args[0]);
+			}
+
+			if (args.Length == 2)
+			{
+				return string.Format(message, exceptionString, args[0], args[1]);
+			}
+
 			int length = args.Length + 1;
 			object[] pooledArgs = ArrayPool<object>.Shared.Rent(length);
 			try
@@ -95,7 +151,5 @@ namespace DTech.Logging
 				ArrayPool<object>.Shared.Return(pooledArgs);
 			}
 		}
-
-		protected abstract void SendLog<TState>(LogLevel logLevel, Exception exception, string message, object[] args, string scopes);
 	}
 }

@@ -7,6 +7,32 @@ namespace DTech.Logging
 {
 	internal sealed class LogLineBuilder
 	{
+		private enum TemplateSegmentKind
+		{
+			Literal,
+			DateTime,
+			LogLevel,
+			LogScope,
+			LogTag,
+			LogState,
+		}
+
+		private readonly struct TemplateSegment
+		{
+			public TemplateSegment(TemplateSegmentKind kind, string value, bool isBracketed, bool removeWhenEmpty)
+			{
+				Kind = kind;
+				Value = value;
+				IsBracketed = isBracketed;
+				RemoveWhenEmpty = removeWhenEmpty;
+			}
+
+			public TemplateSegmentKind Kind { get; }
+			public string Value { get; }
+			public bool IsBracketed { get; }
+			public bool RemoveWhenEmpty { get; }
+		}
+
 		private const string DateTimePlacementPrefix = "DATE_TIME:";
 		private const string LogLevelPlacement = "LOG_LEVEL";
 		private const string LogScopePlacement = "LOG_SCOPE";
@@ -15,6 +41,7 @@ namespace DTech.Logging
 		
 		private readonly string _template;
 		private readonly List<ILogPlacementReplacer> _replacers;
+		private readonly TemplateSegment[] _segments;
 
 		private LogLevel _logLevel;
 		private string _scopes;
@@ -26,6 +53,7 @@ namespace DTech.Logging
 		{
 			_template = template;
 			_replacers = new List<ILogPlacementReplacer>(replacers);
+			_segments = ParseTemplate(template);
 		}
 		
 		public LogLineBuilder SetLogLevel(LogLevel logLevel)
@@ -66,7 +94,7 @@ namespace DTech.Logging
 			}
 
 			var logInfo = new LogInfo(_logLevel, _scopes, _tag, _stateName);
-			string result = ReplaceBuiltInPlacements(_template, logInfo);
+			string result = ReplaceBuiltInPlacements(logInfo);
 			for (int i = 0; i < _replacers.Count; i++)
 			{
 				ILogPlacementReplacer replacer = _replacers[i];
@@ -90,44 +118,110 @@ namespace DTech.Logging
 			_body = string.Empty;
 		}
 
-		private static string ReplaceBuiltInPlacements(string template, LogInfo logInfo)
+		private string ReplaceBuiltInPlacements(LogInfo logInfo)
 		{
-			var builder = new StringBuilder(template.Length + 16);
-			for (int i = 0; i < template.Length; i++)
+			var builder = new StringBuilder(_template.Length + 16);
+			for (int i = 0; i < _segments.Length; i++)
 			{
-				if (TryReplaceDateTime(template, ref i, builder))
+				TemplateSegment segment = _segments[i];
+				switch (segment.Kind)
 				{
-					continue;
-				}
+					case TemplateSegmentKind.Literal:
+					{
+						builder.Append(segment.Value);
+					} break;
 
-				if (TryReplaceToken(template, ref i, builder, LogLevelPlacement, GetLogLevelString(logInfo.Level), false))
-				{
-					continue;
-				}
+					case TemplateSegmentKind.DateTime:
+					{
+						AppendTokenValue(builder, DateTime.Now.ToString(segment.Value), segment.IsBracketed, false);
+					} break;
 
-				if (TryReplaceToken(template, ref i, builder, LogScopePlacement, logInfo.Scopes, true))
-				{
-					continue;
-				}
+					case TemplateSegmentKind.LogLevel:
+					{
+						AppendTokenValue(builder, GetLogLevelString(logInfo.Level), segment.IsBracketed, segment.RemoveWhenEmpty);
+					} break;
 
-				if (TryReplaceToken(template, ref i, builder, LogTagPlacement, logInfo.Tag, true))
-				{
-					continue;
-				}
+					case TemplateSegmentKind.LogScope:
+					{
+						AppendTokenValue(builder, logInfo.Scopes, segment.IsBracketed, segment.RemoveWhenEmpty);
+					} break;
 
-				if (TryReplaceToken(template, ref i, builder, LogStatePlacement, logInfo.StateName == nameof(NullState) ? string.Empty : logInfo.StateName, true))
-				{
-					continue;
-				}
+					case TemplateSegmentKind.LogTag:
+					{
+						AppendTokenValue(builder, logInfo.Tag, segment.IsBracketed, segment.RemoveWhenEmpty);
+					} break;
 
-				builder.Append(template[i]);
+					case TemplateSegmentKind.LogState:
+					{
+						string stateName = logInfo.StateName == nameof(NullState) ? string.Empty : logInfo.StateName;
+						AppendTokenValue(builder, stateName, segment.IsBracketed, segment.RemoveWhenEmpty);
+					} break;
+				}
 			}
 
 			return builder.ToString();
 		}
 
-		private static bool TryReplaceDateTime(string template, ref int index, StringBuilder builder)
+		private static TemplateSegment[] ParseTemplate(string template)
 		{
+			if (string.IsNullOrEmpty(template))
+			{
+				return Array.Empty<TemplateSegment>();
+			}
+
+			var segments = new List<TemplateSegment>(8);
+			int literalStart = 0;
+			int i = 0;
+			while (i < template.Length)
+			{
+				if (TryReadDateTimeSegment(template, i, out TemplateSegment dateSegment, out int nextIndex))
+				{
+					int tokenStart = i;
+					int literalEnd = dateSegment.IsBracketed ? tokenStart - 1 : tokenStart;
+					if (literalEnd > literalStart)
+					{
+						segments.Add(new TemplateSegment(TemplateSegmentKind.Literal, template.Substring(literalStart, literalEnd - literalStart), false, false));
+					}
+
+					segments.Add(dateSegment);
+					i = nextIndex;
+					literalStart = i;
+					continue;
+				}
+
+				if (TryReadBuiltInTokenSegment(template, i, out TemplateSegment tokenSegment, out int tokenLength))
+				{
+					bool hasOpeningBracket = i > 0 && template[i - 1] == '[';
+					bool hasClosingBracket = i + tokenLength < template.Length && template[i + tokenLength] == ']';
+					bool isBracketed = hasOpeningBracket && hasClosingBracket;
+
+					int literalEnd = isBracketed ? i - 1 : i;
+					if (literalEnd > literalStart)
+					{
+						segments.Add(new TemplateSegment(TemplateSegmentKind.Literal, template.Substring(literalStart, literalEnd - literalStart), false, false));
+					}
+
+					segments.Add(new TemplateSegment(tokenSegment.Kind, tokenSegment.Value, isBracketed, tokenSegment.RemoveWhenEmpty));
+					i += tokenLength + (isBracketed ? 1 : 0);
+					literalStart = i;
+					continue;
+				}
+
+				i++;
+			}
+
+			if (literalStart < template.Length)
+			{
+				segments.Add(new TemplateSegment(TemplateSegmentKind.Literal, template.Substring(literalStart), false, false));
+			}
+
+			return segments.ToArray();
+		}
+
+		private static bool TryReadDateTimeSegment(string template, int index, out TemplateSegment segment, out int nextIndex)
+		{
+			segment = default;
+			nextIndex = index;
 			if (!MatchesAt(template, index, DateTimePlacementPrefix))
 			{
 				return false;
@@ -140,37 +234,67 @@ namespace DTech.Logging
 				return false;
 			}
 
+			bool isBracketed = index > 0 && template[index - 1] == '[';
 			string format = template.Substring(formatStart, closingBracketIndex - formatStart);
-			builder.Append(DateTime.Now.ToString(format));
-			index = closingBracketIndex - 1;
+			segment = new TemplateSegment(TemplateSegmentKind.DateTime, format, isBracketed, false);
+			nextIndex = isBracketed ? closingBracketIndex + 1 : closingBracketIndex;
 			return true;
 		}
 
-		private static bool TryReplaceToken(string template, ref int index, StringBuilder builder, string token, string value, bool removeEmptyBracketedToken)
+		private static bool TryReadBuiltInTokenSegment(string template, int index, out TemplateSegment segment, out int tokenLength)
 		{
-			if (!MatchesAt(template, index, token))
-			{
-				return false;
-			}
+			segment = default;
+			tokenLength = 0;
 
-			if (removeEmptyBracketedToken && string.IsNullOrEmpty(value))
+			if (MatchesAt(template, index, LogLevelPlacement))
 			{
-				bool hasOpeningBracket = index > 0 && template[index - 1] == '[';
-				bool hasClosingBracket = index + token.Length < template.Length && template[index + token.Length] == ']';
-				if (hasOpeningBracket && hasClosingBracket && builder.Length > 0 && builder[^1] == '[')
-				{
-					builder.Length--;
-					index += token.Length;
-					return true;
-				}
-
-				index += token.Length - 1;
+				segment = new TemplateSegment(TemplateSegmentKind.LogLevel, null, false, false);
+				tokenLength = LogLevelPlacement.Length;
 				return true;
 			}
 
+			if (MatchesAt(template, index, LogScopePlacement))
+			{
+				segment = new TemplateSegment(TemplateSegmentKind.LogScope, null, false, true);
+				tokenLength = LogScopePlacement.Length;
+				return true;
+			}
+
+			if (MatchesAt(template, index, LogTagPlacement))
+			{
+				segment = new TemplateSegment(TemplateSegmentKind.LogTag, null, false, true);
+				tokenLength = LogTagPlacement.Length;
+				return true;
+			}
+
+			if (MatchesAt(template, index, LogStatePlacement))
+			{
+				segment = new TemplateSegment(TemplateSegmentKind.LogState, null, false, true);
+				tokenLength = LogStatePlacement.Length;
+				return true;
+			}
+
+			return false;
+		}
+
+		private static void AppendTokenValue(StringBuilder builder, string value, bool isBracketed, bool removeWhenEmpty)
+		{
+			if (removeWhenEmpty && string.IsNullOrEmpty(value))
+			{
+				return;
+			}
+
+			if (isBracketed)
+			{
+				builder.Append('[');
+			}
+
 			builder.Append(value);
-			index += token.Length - 1;
-			return true;
+
+			if (isBracketed)
+			{
+				builder.Append(']');
+			}
 		}
 
 		private static bool MatchesAt(string source, int startIndex, string token)

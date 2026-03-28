@@ -5,7 +5,7 @@ namespace DTech.Logging
 {
 	internal sealed class UnityLogger : InternalLoggerBase
 	{
-		protected override LogLineBuilder LineBuilder { get; } =
+		private static readonly LogLineBuilder _lineBuilder =
 			new(LoggerSettings.Instance.ConsoleFormatString, LoggerSettings.Instance.PlacementReplacers);
 		
 		public UnityLogger(string tag) : base(tag)
@@ -25,15 +25,15 @@ namespace DTech.Logging
 		{
 			string logBody = FormatMessage(exception, message, args);
 			string stateName = typeof(TState).Name;
-			LineBuilder.Reset();
-			LineBuilder.SetLogLevel(logLevel)
+			_lineBuilder.Reset();
+			_lineBuilder.SetLogLevel(logLevel)
 				.SetScopes(scopes)
 				.SetTag(Tag)
 				.SetStateName(stateName)
 				.SetBody(logBody);
 
-			string log = LineBuilder.ToString();
-			LineBuilder.Reset();
+			string log = _lineBuilder.ToString();
+			_lineBuilder.Reset();
 			switch (logLevel)
 			{
 				case LogLevel.None:

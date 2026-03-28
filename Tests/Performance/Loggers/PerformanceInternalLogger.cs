@@ -4,7 +4,7 @@ namespace DTech.Logging.Tests.Performance
 {
     internal sealed class PerformanceInternalLogger : InternalLoggerBase
     {
-        protected override LogLineBuilder LineBuilder { get; } =
+        private static readonly LogLineBuilder _lineBuilder =
             new(LoggerSettings.Instance.ConsoleFormatString, LoggerSettings.Instance.PlacementReplacers);
 
         public PerformanceInternalLogger(string tag) : base(tag)
@@ -20,15 +20,15 @@ namespace DTech.Logging.Tests.Performance
 	        {
 	            string logBody = FormatMessage(exception, message, args);
 	            string stateName = typeof(TState).Name;
-            LineBuilder.Reset();
-            string log = LineBuilder.SetLogLevel(logLevel)
+            _lineBuilder.Reset();
+            string log = _lineBuilder.SetLogLevel(logLevel)
                 .SetScopes(scopes)
                 .SetTag(Tag)
                 .SetStateName(stateName)
                 .SetBody(logBody)
                 .ToString();
             
-            LineBuilder.Reset();
+            _lineBuilder.Reset();
         }
     }
 }
