@@ -1,21 +1,48 @@
 using System;
+using System.Buffers;
 
 namespace DTech.Logging
 {
 	public sealed class CompositeScope : IDisposable
 	{
 		private readonly IDisposable[] _disposables;
+		private readonly int _count;
+		private readonly bool _isPooled;
 		
 		public CompositeScope(params IDisposable[] disposables)
+			: this(disposables, disposables.Length, false)
+		{
+		}
+
+		internal CompositeScope(IDisposable[] disposables, int count, bool isPooled)
 		{
 			_disposables = disposables;
+			_count = count;
+			_isPooled = isPooled;
 		}
 		
 		public void Dispose()
 		{
-			foreach (var disposable in _disposables)
+			if (_disposables == null)
 			{
+				return;
+			}
+
+			for (int i = 0; i < _count; i++)
+			{
+				IDisposable disposable = _disposables[i];
+				if (disposable == null)
+				{
+					continue;
+				}
+				
 				disposable.Dispose();
+			}
+
+			if (_isPooled)
+			{
+				Array.Clear(_disposables, 0, _count);
+				ArrayPool<IDisposable>.Shared.Return(_disposables);
 			}
 		}
 	}

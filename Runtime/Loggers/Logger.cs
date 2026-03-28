@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 
 namespace DTech.Logging
 {
@@ -23,19 +24,25 @@ namespace DTech.Logging
 
 		public IDisposable BeginScope(string state)
 		{
-			var scopes = new IDisposable[_loggers.Length];
-			for (int i = 0; i < _loggers.Length; i++)
+			int loggerCount = _loggers.Length;
+			if (loggerCount == 0)
+			{
+				return NullScope.Instance;
+			}
+
+			if (loggerCount == 1)
+			{
+				return _loggers[0].BeginScope(state);
+			}
+
+			IDisposable[] scopes = ArrayPool<IDisposable>.Shared.Rent(loggerCount);
+			for (int i = 0; i < loggerCount; i++)
 			{
 				ILogger logger = _loggers[i];
 				scopes[i] = logger.BeginScope(state);
 			}
 
-			if (scopes.Length == 0)
-			{
-				return NullScope.Instance;
-			}
-			
-			return new CompositeScope(scopes);
+			return new CompositeScope(scopes, loggerCount, true);
 		}
 
 		public bool IsEnabled(LogLevel logLevel)
