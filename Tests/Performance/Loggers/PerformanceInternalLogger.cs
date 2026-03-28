@@ -4,9 +4,6 @@ namespace DTech.Logging.Tests.Performance
 {
     internal sealed class PerformanceInternalLogger : InternalLoggerBase
     {
-        private static readonly LogLineBuilder _lineBuilder =
-            new(LoggerSettings.Instance.ConsoleFormatString, LoggerSettings.Instance.PlacementReplacers);
-
         public PerformanceInternalLogger(string tag) : base(tag)
         {
         }
@@ -18,32 +15,36 @@ namespace DTech.Logging.Tests.Performance
 
         protected override void SendLog<TState>(LogLevel logLevel, Exception exception, string message, object[] args, string scopes)
         {
+            LoggerSettings settings = LoggerSettings.Instance;
+            LogLineBuilder lineBuilder = GetOrCreateLineBuilder(settings.ConsoleFormatString, settings.PlacementReplacers);
             string logBody = FormatMessage(exception, message, args);
             string stateName = typeof(TState).Name;
-            _lineBuilder.Reset();
-            string log = _lineBuilder.SetLogLevel(logLevel)
+            lineBuilder.Reset();
+            string log = lineBuilder.SetLogLevel(logLevel)
                 .SetScopes(scopes)
                 .SetTag(Tag)
                 .SetStateName(stateName)
                 .SetBody(logBody)
                 .ToString();
 
-            _lineBuilder.Reset();
+            lineBuilder.Reset();
         }
 
         protected override void SendLog<TState>(LogLevel logLevel, Exception exception, string message, string scopes)
         {
+            LoggerSettings settings = LoggerSettings.Instance;
+            LogLineBuilder lineBuilder = GetOrCreateLineBuilder(settings.ConsoleFormatString, settings.PlacementReplacers);
             string logBody = FormatMessage(exception, message);
             string stateName = typeof(TState).Name;
-            _lineBuilder.Reset();
-            string log = _lineBuilder.SetLogLevel(logLevel)
+            lineBuilder.Reset();
+            string log = lineBuilder.SetLogLevel(logLevel)
                 .SetScopes(scopes)
                 .SetTag(Tag)
                 .SetStateName(stateName)
                 .SetBody(logBody)
                 .ToString();
 
-            _lineBuilder.Reset();
+            lineBuilder.Reset();
         }
     }
 }

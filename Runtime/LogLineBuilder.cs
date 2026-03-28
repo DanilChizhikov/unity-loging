@@ -7,14 +7,14 @@ namespace DTech.Logging
 {
 	internal sealed class LogLineBuilder
 	{
-		private enum TemplateSegmentKind
+		private enum TemplateSegmentKind : byte
 		{
-			Literal,
-			DateTime,
-			LogLevel,
-			LogScope,
-			LogTag,
-			LogState,
+			Literal = 0,
+			DateTime = 1,
+			LogLevel = 2,
+			LogScope = 3,
+			LogTag = 4,
+			LogState =5,
 		}
 
 		private readonly struct TemplateSegment

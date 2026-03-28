@@ -1,7 +1,9 @@
 using System;
 using System.Buffers;
+using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using DTech.Logging.Placements;
 
 namespace DTech.Logging
 {
@@ -13,6 +15,10 @@ namespace DTech.Logging
 		internal AsyncLocal<LogScope> CurrentScope { get; }
 		
 		protected string Tag { get; }
+		
+		private LogLineBuilder _lineBuilder;
+		private string _lineBuilderFormat;
+		private IReadOnlyList<ILogPlacementReplacer> _lineBuilderReplacers;
 
 		public InternalLoggerBase(string tag)
 		{
@@ -78,6 +84,21 @@ namespace DTech.Logging
 			}
 
 			return string.Format(message, exception.ToString());
+		}
+		
+		protected LogLineBuilder GetOrCreateLineBuilder(string format, IReadOnlyList<ILogPlacementReplacer> replacers)
+		{
+			if (_lineBuilder != null &&
+			    string.Equals(_lineBuilderFormat, format, StringComparison.Ordinal) &&
+			    ReferenceEquals(_lineBuilderReplacers, replacers))
+			{
+				return _lineBuilder;
+			}
+
+			_lineBuilder = new LogLineBuilder(format, replacers);
+			_lineBuilderFormat = format;
+			_lineBuilderReplacers = replacers;
+			return _lineBuilder;
 		}
 
 		private static string BuildScopesString(LogScope current)

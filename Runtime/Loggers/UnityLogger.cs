@@ -5,11 +5,8 @@ namespace DTech.Logging
 {
 	internal sealed class UnityLogger : InternalLoggerBase
 	{
-		private readonly LogLineBuilder _lineBuilder;
-		
 		public UnityLogger(string tag) : base(tag)
 		{
-			_lineBuilder = new LogLineBuilder(LoggerSettings.Instance.ConsoleFormatString, LoggerSettings.Instance.PlacementReplacers);
 		}
 
 		public override bool IsEnabled(LogLevel logLevel)
@@ -35,16 +32,18 @@ namespace DTech.Logging
 
 		private void SendLog<TState>(LogLevel logLevel, string message, string scopes)
 		{
+			LoggerSettings settings = LoggerSettings.Instance;
+			LogLineBuilder lineBuilder = GetOrCreateLineBuilder(settings.ConsoleFormatString, settings.PlacementReplacers);
 			string stateName = typeof(TState).Name;
-			_lineBuilder.Reset();
-			_lineBuilder.SetLogLevel(logLevel)
+			lineBuilder.Reset();
+			lineBuilder.SetLogLevel(logLevel)
 				.SetScopes(scopes)
 				.SetTag(Tag)
 				.SetStateName(stateName)
 				.SetBody(message);
 
-			string log = _lineBuilder.ToString();
-			_lineBuilder.Reset();
+			string log = lineBuilder.ToString();
+			lineBuilder.Reset();
 			switch (logLevel)
 			{
 				case LogLevel.None:
