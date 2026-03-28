@@ -24,13 +24,24 @@ namespace DTech.Logging
 		protected override void SendLog<TState>(LogLevel logLevel, Exception exception, string message, object[] args, string scopes)
 		{
 			string logBody = FormatMessage(exception, message, args);
+			SendLog<TState>(logLevel, logBody, scopes);
+		}
+
+		protected override void SendLog<TState>(LogLevel logLevel, Exception exception, string message, string scopes)
+		{
+			string logBody = FormatMessage(exception, message);
+			SendLog<TState>(logLevel, logBody, scopes);
+		}
+
+		private void SendLog<TState>(LogLevel logLevel, string message, string scopes)
+		{
 			string stateName = typeof(TState).Name;
 			_lineBuilder.Reset();
 			_lineBuilder.SetLogLevel(logLevel)
 				.SetScopes(scopes)
 				.SetTag(Tag)
 				.SetStateName(stateName)
-				.SetBody(logBody);
+				.SetBody(message);
 
 			string log = _lineBuilder.ToString();
 			_lineBuilder.Reset();

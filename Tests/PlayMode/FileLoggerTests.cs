@@ -62,11 +62,11 @@ namespace DTech.Logging.Tests
 
 			Assert.IsFalse(exists, $"File should not exist at path: {currentLogFilePath};\n{fileContents}");
 		}
-		
+
 		private sealed class CapturingFileLogger : InternalLoggerBase
 		{
 			private LogLineBuilder LineBuilder { get; }
-			
+
 			public CapturingFileLogger(string tag, string logTemplate) : base(tag)
 			{
 				LineBuilder = new LogLineBuilder(logTemplate, Array.Empty<ILogPlacementReplacer>());
@@ -78,22 +78,43 @@ namespace DTech.Logging.Tests
 					LoggerSettings.Instance.IsEnabled(logLevel);
 			}
 
-				protected override void SendLog<TState>(LogLevel logLevel, Exception exception, string message, object[] args, string scopes)
+			protected override void SendLog<TState>(LogLevel logLevel, Exception exception, string message, object[] args, string scopes)
+			{
+				if (!LoggerSettings.Instance.IsFileLoggingEnabled)
 				{
-					if (!LoggerSettings.Instance.IsFileLoggingEnabled)
-					{
-						return;
-					}
-				
-					string logBody = FormatMessage(exception, message, args);
-					string stateName = typeof(TState).Name;
+					return;
+				}
+
+				string logBody = FormatMessage(exception, message, args);
+				string stateName = typeof(TState).Name;
 				LineBuilder.Reset();
 				LineBuilder.SetLogLevel(logLevel)
 					.SetScopes(scopes)
 					.SetTag(Tag)
 					.SetStateName(stateName)
 					.SetBody(logBody);
-			
+
+				using var stream = new StreamWriter(LoggerFileProvider.CurrentLogFilePath, true);
+				stream.WriteLine(LineBuilder.ToString());
+				LineBuilder.Reset();
+			}
+
+			protected override void SendLog<TState>(LogLevel logLevel, Exception exception, string message, string scopes)
+			{
+				if (!LoggerSettings.Instance.IsFileLoggingEnabled)
+				{
+					return;
+				}
+
+				string logBody = FormatMessage(exception, message);
+				string stateName = typeof(TState).Name;
+				LineBuilder.Reset();
+				LineBuilder.SetLogLevel(logLevel)
+					.SetScopes(scopes)
+					.SetTag(Tag)
+					.SetStateName(stateName)
+					.SetBody(logBody);
+
 				using var stream = new StreamWriter(LoggerFileProvider.CurrentLogFilePath, true);
 				stream.WriteLine(LineBuilder.ToString());
 				LineBuilder.Reset();

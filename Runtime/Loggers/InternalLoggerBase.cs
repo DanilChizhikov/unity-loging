@@ -39,8 +39,16 @@ namespace DTech.Logging
 			string scopes = BuildScopesString(CurrentScope.Value);
 			SendLog<TState>(logLevel, exception, message, args, scopes);
 		}
+
+		public void Log<TState>(LogLevel logLevel, Exception exception, string message)
+		{
+			string scopes = BuildScopesString(CurrentScope.Value);
+			SendLog<TState>(logLevel, exception, message, scopes);
+		}
 		
 		protected abstract void SendLog<TState>(LogLevel logLevel, Exception exception, string message, object[] args, string scopes);
+		
+		protected abstract void SendLog<TState>(LogLevel logLevel, Exception exception, string message, string scopes);
 		
 		protected static string FormatMessage(Exception exception, string message, object[] args)
 		{
@@ -60,6 +68,16 @@ namespace DTech.Logging
 			}
 
 			return FormatMessageWithException(message, exception, args);
+		}
+		
+		protected static string FormatMessage(Exception exception, string message)
+		{
+			if (exception == null)
+			{
+				return message;
+			}
+
+			return string.Format(message, exception.ToString());
 		}
 
 		private static string BuildScopesString(LogScope current)

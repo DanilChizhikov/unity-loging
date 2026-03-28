@@ -243,33 +243,41 @@ namespace DTech.Logging.Tests
 				return true;
 			}
 
-				public void Log<TState>(LogLevel logLevel, Exception exception, string message, object[] args)
+			public void Log<TState>(LogLevel logLevel, Exception exception, string message, object[] args)
+			{
+				LastLogLevel = logLevel;
+				LastException = exception;
+				LastStateTypeName = typeof(TState).Name;
+				if (exception == null)
 				{
-					LastLogLevel = logLevel;
-					LastException = exception;
-					LastStateTypeName = typeof(TState).Name;
-					if (exception == null)
-					{
-						LastFormattedMessage = args is { Length: > 0 } ? string.Format(message, args) : message;
-						return;
-					}
-
-					if (args == null || args.Length == 0)
-					{
-						LastFormattedMessage = string.Format(message, exception.ToString());
-						return;
-					}
-
-					var formatArgs = new object[args.Length + 1];
-					formatArgs[0] = exception.ToString();
-					for (int i = 0; i < args.Length; i++)
-					{
-						formatArgs[i + 1] = args[i];
-					}
-
-					LastFormattedMessage = string.Format(message, formatArgs);
+					LastFormattedMessage = args is { Length: > 0 } ? string.Format(message, args) : message;
+					return;
 				}
+
+				if (args == null || args.Length == 0)
+				{
+					LastFormattedMessage = string.Format(message, exception.ToString());
+					return;
+				}
+
+				var formatArgs = new object[args.Length + 1];
+				formatArgs[0] = exception.ToString();
+				for (int i = 0; i < args.Length; i++)
+				{
+					formatArgs[i + 1] = args[i];
+				}
+
+				LastFormattedMessage = string.Format(message, formatArgs);
 			}
+
+			public void Log<TState>(LogLevel logLevel, Exception exception, string message)
+			{
+				LastLogLevel = logLevel;
+				LastException = exception;
+				LastStateTypeName = typeof(TState).Name;
+				LastFormattedMessage = exception == null ? message : string.Format(message, exception.ToString());
+			}
+		}
 
 		[Serializable]
 		private class JsonObject

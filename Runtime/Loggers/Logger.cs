@@ -70,6 +70,18 @@ namespace DTech.Logging
 				}
 			}
 		}
+
+		public void Log<TState>(LogLevel logLevel, Exception exception, string message)
+		{
+			for (int i = 0; i < _loggers.Length; i++)
+			{
+				ILogger logger = _loggers[i];
+				if (logger.IsEnabled(logLevel))
+				{
+					logger.Log<TState>(logLevel, exception, message);
+				}
+			}
+		}
 	}
 
 	public sealed class Logger<TCategoryName> : ILogger<TCategoryName>
@@ -104,6 +116,11 @@ namespace DTech.Logging
 		public void Log<TState>(LogLevel logLevel, Exception exception, string message, object[] args)
 		{
 			_logger.Log<TState>(logLevel, exception, message, args);
+		}
+
+		public void Log<TState>(LogLevel logLevel, Exception exception, string message)
+		{
+			_logger.Log<TState>(logLevel, exception, message);
 		}
 	}
 }
