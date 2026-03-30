@@ -38,9 +38,9 @@ log messages with different levels, and structure log messages with named parame
     ```
 3. Unity will automatically import the package.
 
-If you want to set a target version, Logging uses the `v*.*.*` release tag so you can specify a version like #v0.4.0.
+If you want to set a target version, Logging uses the `v*.*.*` release tag so you can specify a version like #v1.0.0.
 
-For example `https://github.com/DanilChizhikov/unity-loging.git#v0.4.0`.
+For example `https://github.com/DanilChizhikov/unity-loging.git#v1.0.0`.
 
 ## Features
 - Multiple log levels (Trace, Debug, Information, Warning, Error, Critical)
@@ -51,6 +51,8 @@ For example `https://github.com/DanilChizhikov/unity-loging.git#v0.4.0`.
 - Extensible logging pipeline
 - Compatible with Microsoft.Extensions.Logging patterns
 - Log format template
+- Memory-efficient template parsing with caching
+- Zero-allocation scopes via ArrayPool
 
 ## Settings
 For control log on release builds, you can use the `LoggerSettings`.
@@ -91,6 +93,28 @@ public class Example : MonoBehaviour
     private void Start()
     {
         _logger = new Logger<Example>();
+        
+        // Basic logging
+        _logger.LogInfo("This is an info message");
+        _logger.LogWarning("This is a warning message");
+        _logger.LogError("This is an error message");
+    }
+}
+```
+
+```csharp
+using DTech.Logging;
+
+public class ExampleWithCustomLoggers : MonoBehaviour
+{
+    private ILogger _logger;
+    
+    private void Start()
+    {
+        // Custom logger configuration
+        _logger = new Logger(nameof(ExampleWithCustomLoggers), 
+            new UnityLogger(nameof(ExampleWithCustomLoggers)),
+            new FileLogger(nameof(ExampleWithCustomLoggers)));
         
         // Basic logging
         _logger.LogInfo("This is an info message");
