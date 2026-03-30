@@ -1,5 +1,37 @@
 # Changelog
 
+## [1.0.0] - 2025-03-30
+
+### Added
+- Performance optimizations
+  - Rewrote `LogLineBuilder` with template parsing and segment caching for faster log formatting
+  - Added `LoggerUtility` class for centralized logger management
+  - Added `DefaultLoggerProviderAttribute` for marking custom logger provider methods
+  - Added `ArrayPool` usage for scope management to reduce allocations
+  - Logger now accepts custom logger array via constructor: `Logger(string tag, params ILogger[] loggers)`
+- Performance tests
+  - `GenericLoggerPerformanceTests` - performance benchmarks for generic loggers
+  - `LogLineBuilderPerformanceTests` - template parsing and formatting performance
+  - `LoggerPerformanceTests` - general logger performance benchmarks
+  - `LoggerStressTests` - high-load stress testing
+  - `LoggerUtilityPerformanceTests` - utility method performance
+  - `MemoryAllocationTests` - GC allocation testing
+  - `ScopePerformanceTests` - scope creation/disposal benchmarks
+
+### Changed
+- **API Breaking Changes**
+  - `ILogger.Log<TState>` signature changed: now accepts `string message, object[] args` instead of `Func<Exception, string> formatter`
+  - Added new `Log<TState>` overload for plain messages without formatting arguments
+  - `BeginScope<TState>()` documentation cleaned up
+- **Internal Changes**
+  - Removed individual placement replacer classes: `DateTimeLogPlacementReplacer`, `LogLevelPlacementReplacer`, `ScopesLogPlacementReplacer`, `StateLogPlacementReplacer`, `TagLogPlacementReplacer`
+  - Built-in placements now handled internally by `LogLineBuilder` for better performance
+  - Tests reorganized into `PlayMode` and `Performance` folders
+  - `Logger` now uses `LoggerUtility.GetDefaultLoggers(tag)` instead of hardcoded array
+
+### Fixed
+- File logging disabled by default in Editor (performance improvement)
+
 ## [0.4.0] - 2025-12-10
 
 ## Removed

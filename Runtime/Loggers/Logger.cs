@@ -1,18 +1,20 @@
 using System;
+using System.Buffers;
 
 namespace DTech.Logging
 {
 	public sealed class Logger : ILogger
 	{
-		private readonly InternalLoggerBase[] _loggers;
+		private readonly ILogger[] _loggers;
 
 		public Logger(string tag)
 		{
-			_loggers = new InternalLoggerBase[]
-			{
-				new UnityLogger(tag),
-				new FileLogger(tag)
-			};
+			_loggers = LoggerUtility.GetDefaultLoggers(tag);
+		}
+
+		public Logger(string tag, params ILogger[] loggers)
+		{
+			_loggers = loggers ?? LoggerUtility.GetDefaultLoggers(tag);
 		}
 
 		public IDisposable BeginScope<TState>()
@@ -22,26 +24,32 @@ namespace DTech.Logging
 
 		public IDisposable BeginScope(string state)
 		{
-			var scopes = new IDisposable[_loggers.Length];
-			for (int i = 0; i < _loggers.Length; i++)
-			{
-				InternalLoggerBase logger = _loggers[i];
-				scopes[i] = logger.BeginScope(state);
-			}
-
-			if (scopes.Length == 0)
+			int loggerCount = _loggers.Length;
+			if (loggerCount == 0)
 			{
 				return NullScope.Instance;
 			}
-			
-			return new CompositeScope(scopes);
+
+			if (loggerCount == 1)
+			{
+				return _loggers[0].BeginScope(state);
+			}
+
+			IDisposable[] scopes = ArrayPool<IDisposable>.Shared.Rent(loggerCount);
+			for (int i = 0; i < loggerCount; i++)
+			{
+				ILogger logger = _loggers[i];
+				scopes[i] = logger.BeginScope(state);
+			}
+
+			return new CompositeScope(scopes, loggerCount, true);
 		}
 
 		public bool IsEnabled(LogLevel logLevel)
 		{
 			for (int i = 0; i < _loggers.Length; i++)
 			{
-				InternalLoggerBase logger = _loggers[i];
+				ILogger logger = _loggers[i];
 				if (logger.IsEnabled(logLevel))
 				{
 					return true;
@@ -51,14 +59,26 @@ namespace DTech.Logging
 			return false;
 		}
 
-		public void Log<TState>(LogLevel logLevel, Exception exception, Func<Exception, string> formatter)
+		public void Log<TState>(LogLevel logLevel, Exception exception, string message, object[] args)
 		{
 			for (int i = 0; i < _loggers.Length; i++)
 			{
-				InternalLoggerBase logger = _loggers[i];
+				ILogger logger = _loggers[i];
 				if (logger.IsEnabled(logLevel))
 				{
-					logger.Log<TState>(logLevel, exception, formatter);
+					logger.Log<TState>(logLevel, exception, message, args);
+				}
+			}
+		}
+
+		public void Log<TState>(LogLevel logLevel, Exception exception, string message)
+		{
+			for (int i = 0; i < _loggers.Length; i++)
+			{
+				ILogger logger = _loggers[i];
+				if (logger.IsEnabled(logLevel))
+				{
+					logger.Log<TState>(logLevel, exception, message);
 				}
 			}
 		}
@@ -71,6 +91,11 @@ namespace DTech.Logging
 		public Logger()
 		{
 			_logger = new Logger(typeof(TCategoryName).Name);
+		}
+
+		public Logger(params ILogger[] loggers)
+		{
+			_logger = new Logger(typeof(TCategoryName).Name, loggers);
 		}
 		
 		public IDisposable BeginScope<TState>()
@@ -88,9 +113,14 @@ namespace DTech.Logging
 			return _logger.IsEnabled(logLevel);
 		}
 
-		public void Log<TState>(LogLevel logLevel, Exception exception, Func<Exception, string> formatter)
+		public void Log<TState>(LogLevel logLevel, Exception exception, string message, object[] args)
 		{
-			_logger.Log<TState>(logLevel, exception, formatter);
+			_logger.Log<TState>(logLevel, exception, message, args);
+		}
+
+		public void Log<TState>(LogLevel logLevel, Exception exception, string message)
+		{
+			_logger.Log<TState>(logLevel, exception, message);
 		}
 	}
 }
