@@ -8,26 +8,22 @@ namespace DTech.Logging
 	[CreateAssetMenu(fileName = nameof(LoggerSettings), menuName = "DTech/Logging/Logger Settings")]
 	public sealed class LoggerSettings : ScriptableObject
 	{
-		private static readonly object _lockObject = new();
-		
+		private static volatile LoggerSettings _instance;
+
 		public static LoggerSettings Instance
 		{
 			get
 			{
-				lock (_lockObject)
+				LoggerSettings inst = _instance;
+				if (inst == null)
 				{
-					if (!_hasInstance)
-					{
-						_instance = Resources.Load<LoggerSettings>(nameof(LoggerSettings));
-						_hasInstance = true;
-					}
+					inst = Resources.Load<LoggerSettings>(nameof(LoggerSettings));
+					_instance = inst;
 				}
-				
-				return _instance;
+
+				return inst;
 			}
 		}
-
-		private static bool _hasInstance = false;
 		
 		[SerializeField] private bool _isTraceEnabled = false;
 		[SerializeField] private bool _isDebugEnabled = false;
@@ -41,8 +37,6 @@ namespace DTech.Logging
 		[SerializeField] private string _consoleFormatString = "[LOG_LEVEL][LOG_SCOPE][LOG_TAG][LOG_STATE]";
 		[SerializeField] private string _fileFormatString = "[DATE_TIME:HH:mm:ss.fff][LOG_LEVEL][LOG_SCOPE][LOG_TAG][LOG_STATE]";
 		[SerializeField] private ScriptableLogPlacementReplacer[] _placementReplacers = Array.Empty<ScriptableLogPlacementReplacer>();
-		
-		private static LoggerSettings _instance;
 
 		public bool IsFileLoggingEnabled => LogConditions.IsFileLoggingEnabled && _isFileLoggingEnabled;
 		public string ConsoleFormatString => _consoleFormatString;

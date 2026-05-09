@@ -35,15 +35,7 @@ namespace DTech.Logging
 			LoggerSettings settings = LoggerSettings.Instance;
 			LogLineBuilder lineBuilder = GetOrCreateLineBuilder(settings.ConsoleFormatString, settings.PlacementReplacers);
 			string stateName = StateName<TState>.Value;
-			lineBuilder.Reset();
-			lineBuilder.SetLogLevel(logLevel)
-				.SetScopes(scopes)
-				.SetTag(Tag)
-				.SetStateName(stateName)
-				.SetBody(message);
-
-			string log = lineBuilder.ToString();
-			lineBuilder.Reset();
+			string log = lineBuilder.Render(logLevel, scopes, Tag, stateName, message);
 			switch (logLevel)
 			{
 				case LogLevel.None:

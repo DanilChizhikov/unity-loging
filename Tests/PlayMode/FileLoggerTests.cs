@@ -87,16 +87,9 @@ namespace DTech.Logging.Tests
 
 				string logBody = FormatMessage(exception, message, args);
 				string stateName = typeof(TState).Name;
-				LineBuilder.Reset();
-				LineBuilder.SetLogLevel(logLevel)
-					.SetScopes(scopes)
-					.SetTag(Tag)
-					.SetStateName(stateName)
-					.SetBody(logBody);
-
+				string log = LineBuilder.Render(logLevel, scopes, Tag, stateName, logBody);
 				using var stream = new StreamWriter(LoggerFileProvider.CurrentLogFilePath, true);
-				stream.WriteLine(LineBuilder.ToString());
-				LineBuilder.Reset();
+				stream.WriteLine(log);
 			}
 
 			protected override void SendLog<TState>(LogLevel logLevel, Exception exception, string message, string scopes)
@@ -108,16 +101,10 @@ namespace DTech.Logging.Tests
 
 				string logBody = FormatMessage(exception, message);
 				string stateName = typeof(TState).Name;
-				LineBuilder.Reset();
-				LineBuilder.SetLogLevel(logLevel)
-					.SetScopes(scopes)
-					.SetTag(Tag)
-					.SetStateName(stateName)
-					.SetBody(logBody);
+				string log = LineBuilder.Render(logLevel, scopes, Tag, stateName, logBody);
 
 				using var stream = new StreamWriter(LoggerFileProvider.CurrentLogFilePath, true);
-				stream.WriteLine(LineBuilder.ToString());
-				LineBuilder.Reset();
+				stream.WriteLine(log);
 			}
 		}
 	}

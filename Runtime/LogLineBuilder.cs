@@ -56,62 +56,26 @@ namespace DTech.Logging
 		private const string LogScopePlacement = "LOG_SCOPE";
 		private const string LogTagPlacement = "LOG_TAG";
 		private const string LogStatePlacement = "LOG_STATE";
-		
+
 		private readonly string _template;
 		private readonly List<ILogPlacementReplacer> _replacers;
 		private readonly TemplateSegment[] _segments;
 
-		private LogLevel _logLevel;
-		private string _scopes;
-		private string _tag;
-		private string _stateName;
-		private string _body;
-		
 		public LogLineBuilder(string template, IEnumerable<ILogPlacementReplacer> replacers)
 		{
 			_template = template;
 			_replacers = new List<ILogPlacementReplacer>(replacers);
 			_segments = ParseTemplate(template);
 		}
-		
-		public LogLineBuilder SetLogLevel(LogLevel logLevel)
-		{
-			_logLevel = logLevel;
-			return this;
-		}
-		
-		public LogLineBuilder SetScopes(string scopes)
-		{
-			_scopes = scopes;
-			return this;
-		}
 
-		public LogLineBuilder SetTag(string tag)
-		{
-			_tag = tag;
-			return this;
-		}
-		
-		public LogLineBuilder SetStateName(string stateName)
-		{
-			_stateName = stateName;
-			return this;
-		}
-		
-		public LogLineBuilder SetBody(string body)
-		{
-			_body = body;
-			return this;
-		}
-
-		public override string ToString()
+		public string Render(LogLevel logLevel, string scopes, string tag, string stateName, string body)
 		{
 			if (string.IsNullOrEmpty(_template))
 			{
-				return _body;
+				return body;
 			}
 
-			var logInfo = new LogInfo(_logLevel, _scopes, _tag, _stateName);
+			var logInfo = new LogInfo(logLevel, scopes, tag, stateName);
 			StringBuilder sb = RentBuilder();
 			AppendBuiltInSegments(sb, logInfo);
 
@@ -127,7 +91,7 @@ namespace DTech.Logging
 					sb.Append(' ');
 				}
 
-				sb.Append(_body);
+				sb.Append(body);
 				return sb.ToString();
 			}
 
@@ -143,16 +107,7 @@ namespace DTech.Logging
 				result = result.Remove(result.Length - 1);
 			}
 
-			return result + " " + _body;
-		}
-
-		public void Reset()
-		{
-			_logLevel = LogLevel.Information;
-			_scopes = string.Empty;
-			_tag = string.Empty;
-			_stateName = string.Empty;
-			_body = string.Empty;
+			return result + " " + body;
 		}
 
 		private void AppendBuiltInSegments(StringBuilder builder, LogInfo logInfo)
