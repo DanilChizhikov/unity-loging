@@ -14,7 +14,7 @@ namespace DTech.Logging
 
 		public Logger(string tag, params ILogger[] loggers)
 		{
-			_loggers = loggers is { Length: > 0 } ? loggers : LoggerUtility.GetDefaultLoggers(tag);
+			_loggers = loggers ?? LoggerUtility.GetDefaultLoggers(tag);
 		}
 
 		public IDisposable BeginScope<TState>()
