@@ -34,10 +34,36 @@ namespace DTech.Logging
 
 		internal void OnScopeDisposed(LogScope scope)
 		{
-			if (_currentScope.Value == scope)
+			LogScope current = _currentScope.Value;
+			if (current == scope)
 			{
-				_currentScope.Value = scope.Parent;
+				_currentScope.Value = SkipDisposed(scope.Parent);
+				return;
 			}
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+			if (current != null)
+			{
+				UnityEngine.Debug.LogWarning(
+					$"[{nameof(Logger)}] LogScope disposed out of LIFO order (disposed='{scope.Name}', current='{current.Name}'). Use 'using' blocks to ensure correct nesting.");
+			}
+#endif
+
+			if (current != null && current.IsDisposed)
+			{
+				_currentScope.Value = SkipDisposed(current.Parent);
+			}
+		}
+
+		private static LogScope SkipDisposed(LogScope start)
+		{
+			LogScope cursor = start;
+			while (cursor != null && cursor.IsDisposed)
+			{
+				cursor = cursor.Parent;
+			}
+
+			return cursor;
 		}
 
 		public bool IsEnabled(LogLevel logLevel)
