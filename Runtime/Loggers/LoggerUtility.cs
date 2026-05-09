@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+#if !ENABLE_IL2CPP
 using System.Linq.Expressions;
+#endif
 using System.Reflection;
 using DTech.Logging.Attributes;
 using UnityEngine;
@@ -14,10 +16,18 @@ namespace DTech.Logging
 			tag => new UnityLogger(tag),
 			tag => new FileLogger(tag),
 		};
-		
+
 		private static readonly Lazy<Func<string, ILogger>[]> _cachedLoggerFactories =
 			new(BuildLoggerFactories, true);
-		
+
+		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+		private static void Prewarm()
+		{
+			// Force the assembly scan + factory build to happen during scene load
+			// (typically behind a splash) instead of on the first log call mid-gameplay.
+			_ = _cachedLoggerFactories.Value;
+		}
+
 		public static ILogger[] GetDefaultLoggers(string tag)
 		{
 			Func<string, ILogger>[] factories = _cachedLoggerFactories.Value;
@@ -110,6 +120,11 @@ namespace DTech.Logging
 
 		private static Func<string, ILogger> CreateFactory(ConstructorInfo ctor)
 		{
+#if ENABLE_IL2CPP
+			// Expression.Compile is not supported on IL2CPP; it falls back to
+			// reflection invoke at runtime anyway. Skip the build cost.
+			return tag => (ILogger)ctor.Invoke(new object[] { tag });
+#else
 			try
 			{
 				ParameterExpression tagParameter = Expression.Parameter(typeof(string), "tag");
@@ -121,6 +136,7 @@ namespace DTech.Logging
 			{
 				return tag => (ILogger)ctor.Invoke(new object[] { tag });
 			}
+#endif
 		}
 	}
 }

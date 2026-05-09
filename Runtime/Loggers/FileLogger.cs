@@ -37,7 +37,14 @@ namespace DTech.Logging
 			SendLog<TState>(logLevel, logBody, scopes);
 		}
 		
-		private bool IsLogEnabled() => !Application.isEditor && LoggerSettings.Instance.IsFileLoggingEnabled;
+		private bool IsLogEnabled()
+		{
+#if UNITY_EDITOR
+			return false;
+#else
+			return LoggerSettings.Instance.IsFileLoggingEnabled;
+#endif
+		}
 
 		private void SendLog<TState>(LogLevel logLevel, string message, string scopes)
 		{

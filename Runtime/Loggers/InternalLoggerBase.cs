@@ -88,7 +88,7 @@ namespace DTech.Logging
 		protected LogLineBuilder GetOrCreateLineBuilder(string format, IReadOnlyList<ILogPlacementReplacer> replacers)
 		{
 			if (_lineBuilder != null &&
-			    string.Equals(_lineBuilderFormat, format, StringComparison.Ordinal) &&
+			    ReferenceEquals(_lineBuilderFormat, format) &&
 			    ReferenceEquals(_lineBuilderReplacers, replacers))
 			{
 				return _lineBuilder;
