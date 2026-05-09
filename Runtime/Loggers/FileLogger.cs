@@ -50,7 +50,7 @@ namespace DTech.Logging
 		{
 			LoggerSettings settings = LoggerSettings.Instance;
 			LogLineBuilder lineBuilder = GetOrCreateLineBuilder(settings.FileFormatString, settings.PlacementReplacers);
-			string stateName = typeof(TState).Name;
+			string stateName = StateName<TState>.Value;
 			string log = lineBuilder.Render(logLevel, scopes, Tag, stateName, message);
 
 			using var stream = new StreamWriter(LoggerFileProvider.CurrentLogFilePath, true);

@@ -18,7 +18,7 @@ namespace DTech.Logging.Tests.Performance
             LoggerSettings settings = LoggerSettings.Instance;
             LogLineBuilder lineBuilder = GetOrCreateLineBuilder(settings.ConsoleFormatString, settings.PlacementReplacers);
             string logBody = FormatMessage(exception, message, args);
-            string stateName = typeof(TState).Name;
+            string stateName = StateName<TState>.Value;
             _ = lineBuilder.Render(logLevel, scopes, Tag, stateName, logBody);
         }
 
@@ -27,7 +27,7 @@ namespace DTech.Logging.Tests.Performance
             LoggerSettings settings = LoggerSettings.Instance;
             LogLineBuilder lineBuilder = GetOrCreateLineBuilder(settings.ConsoleFormatString, settings.PlacementReplacers);
             string logBody = FormatMessage(exception, message);
-            string stateName = typeof(TState).Name;
+            string stateName = StateName<TState>.Value;
             _ = lineBuilder.Render(logLevel, scopes, Tag, stateName, logBody);
         }
     }

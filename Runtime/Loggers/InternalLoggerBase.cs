@@ -1,7 +1,6 @@
 using System;
 using System.Buffers;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading;
 using DTech.Logging.Placements;
 
@@ -9,8 +8,6 @@ namespace DTech.Logging
 {
 	internal abstract class InternalLoggerBase : ILogger
 	{
-		private const string ScopesSeparator = " > ";
-
 		internal AsyncLocal<LogScope> CurrentScope { get; }
 
 		protected string Tag { get; }
@@ -32,7 +29,7 @@ namespace DTech.Logging
 
 		public IDisposable BeginScope(string state)
 		{
-			var newScope = new LogScope(state, this, CurrentScope.Value);
+			var newScope = new LogScope(Tag, state, this, CurrentScope.Value);
 			CurrentScope.Value = newScope;
 			return newScope;
 		}
@@ -86,48 +83,7 @@ namespace DTech.Logging
 
 		private static string BuildScopesString(LogScope current)
 		{
-			if (current == null)
-			{
-				return string.Empty;
-			}
-
-			int scopeCount = 0;
-			LogScope traversal = current;
-			while (traversal != null)
-			{
-				scopeCount++;
-				traversal = traversal.Parent;
-			}
-
-			string[] names = ArrayPool<string>.Shared.Rent(scopeCount);
-			int index = scopeCount;
-			int totalNamesLength = 0;
-			traversal = current;
-			while (traversal != null)
-			{
-				string name = traversal.Name;
-				names[--index] = name;
-				totalNamesLength += name.Length;
-				traversal = traversal.Parent;
-			}
-
-			int totalLength = totalNamesLength + (scopeCount - 1) * ScopesSeparator.Length;
-			var builder = new StringBuilder(totalLength);
-			for (int i = 0; i < scopeCount; i++)
-			{
-				if (i > 0)
-				{
-					builder.Append(ScopesSeparator);
-				}
-
-				builder.Append(names[i]);
-			}
-
-			string log = builder.ToString();
-			Array.Clear(names, 0, scopeCount);
-			ArrayPool<string>.Shared.Return(names);
-
-			return log;
+			return current?.Scopes ?? string.Empty;
 		}
 
 		private static string FormatMessageWithoutException(string message, object[] args)

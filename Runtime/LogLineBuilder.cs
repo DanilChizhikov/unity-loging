@@ -7,6 +7,24 @@ namespace DTech.Logging
 {
 	internal sealed class LogLineBuilder
 	{
+		[ThreadStatic] private static StringBuilder t_builder;
+
+		private static StringBuilder RentBuilder()
+		{
+			StringBuilder sb = t_builder;
+			if (sb == null)
+			{
+				sb = new StringBuilder(128);
+				t_builder = sb;
+			}
+			else
+			{
+				sb.Clear();
+			}
+
+			return sb;
+		}
+
 		private enum TemplateSegmentKind : byte
 		{
 			Literal = 0,
@@ -58,7 +76,26 @@ namespace DTech.Logging
 			}
 
 			var logInfo = new LogInfo(logLevel, scopes, tag, stateName);
-			string result = ReplaceBuiltInPlacements(logInfo);
+			StringBuilder sb = RentBuilder();
+			AppendBuiltInSegments(sb, logInfo);
+
+			if (_replacers.Count == 0)
+			{
+				if (sb.Length > 0 && sb[sb.Length - 1] == ' ')
+				{
+					sb.Length--;
+				}
+
+				if (sb.Length > 0)
+				{
+					sb.Append(' ');
+				}
+
+				sb.Append(body);
+				return sb.ToString();
+			}
+
+			string result = sb.ToString();
 			for (int i = 0; i < _replacers.Count; i++)
 			{
 				ILogPlacementReplacer replacer = _replacers[i];
@@ -73,9 +110,8 @@ namespace DTech.Logging
 			return result + " " + body;
 		}
 
-		private string ReplaceBuiltInPlacements(LogInfo logInfo)
+		private void AppendBuiltInSegments(StringBuilder builder, LogInfo logInfo)
 		{
-			var builder = new StringBuilder(_template.Length + 16);
 			for (int i = 0; i < _segments.Length; i++)
 			{
 				TemplateSegment segment = _segments[i];
@@ -113,8 +149,6 @@ namespace DTech.Logging
 					} break;
 				}
 			}
-
-			return builder.ToString();
 		}
 
 		private static TemplateSegment[] ParseTemplate(string template)
