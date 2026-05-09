@@ -3,7 +3,7 @@ using System.Buffers;
 
 namespace DTech.Logging
 {
-	public sealed class CompositeScope : IDisposable
+	internal sealed class CompositeScope : IDisposable
 	{
 		private readonly IDisposable[] _disposables;
 		private readonly int _count;
