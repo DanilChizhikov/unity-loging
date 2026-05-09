@@ -40,7 +40,7 @@ namespace DTech.Logging.Tests
         [Test]
         [TestCase("[LOG_LEVEL]", "Test message", "[INFO] Test message")]
         [TestCase("[LOG_TAG] ", "Test message", "[LogFormatTests] Test message")]
-        [TestCase("[LOG_SCOPE] ", "Test message", "[Scope > LogFormatTests > TestScope] Test message")]
+        [TestCase("[LOG_SCOPE] ", "Test message", "[TestScope] Test message")]
         [TestCase("[LOG_LEVEL] [LOG_TAG] ", "Test message", "[INFO] [LogFormatTests] Test message")]
         [TestCase("", "Test message", "Test message")]
         public void Log_WithCustomConsoleFormat_AppliesFormatCorrectly(string format, string message, string expectedStart = null)
@@ -92,7 +92,7 @@ namespace DTech.Logging.Tests
         [Test]
         public void Log_WithScopes_IncludesScopesInOutput()
         {
-            const string Expected = "[Scope > LogFormatTests > TestScope] Scoped message";
+            const string Expected = "[TestScope] Scoped message";
             
             _settingsWrapper.ResetSettings()
                 .OverrideFileLoggingEnabled(false)
