@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using UnityEngine;
 
 namespace DTech.Logging
@@ -21,7 +20,7 @@ namespace DTech.Logging
 			{
 				return;
 			}
-			
+
 			string logBody = FormatMessage(exception, message, args);
 			SendLog<TState>(logLevel, logBody, scopes);
 		}
@@ -36,7 +35,7 @@ namespace DTech.Logging
 			string logBody = FormatMessage(exception, message);
 			SendLog<TState>(logLevel, logBody, scopes);
 		}
-		
+
 		private bool IsLogEnabled()
 		{
 #if UNITY_EDITOR
@@ -53,8 +52,7 @@ namespace DTech.Logging
 			string stateName = StateName<TState>.Value;
 			string log = lineBuilder.Render(logLevel, scopes, Tag, stateName, message);
 
-			using var stream = new StreamWriter(LoggerFileProvider.CurrentLogFilePath, true);
-			stream.WriteLine(log);
+			BackgroundFileLogSink.Instance.Enqueue(log);
 		}
 	}
 }
