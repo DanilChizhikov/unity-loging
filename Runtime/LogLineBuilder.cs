@@ -57,20 +57,18 @@ namespace DTech.Logging
 		private const string LogTagPlacement = "LOG_TAG";
 		private const string LogStatePlacement = "LOG_STATE";
 
-		private readonly string _template;
 		private readonly List<ILogPlacementReplacer> _replacers;
 		private readonly TemplateSegment[] _segments;
 
 		public LogLineBuilder(string template, IEnumerable<ILogPlacementReplacer> replacers)
 		{
-			_template = template;
 			_replacers = new List<ILogPlacementReplacer>(replacers);
 			_segments = ParseTemplate(template);
 		}
 
 		public string Render(LogLevel logLevel, string scopes, string tag, string stateName, string body)
 		{
-			if (string.IsNullOrEmpty(_template))
+			if (_segments.Length == 0)
 			{
 				return body;
 			}
