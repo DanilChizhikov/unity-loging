@@ -51,16 +51,10 @@ namespace DTech.Logging
 			LoggerSettings settings = LoggerSettings.Instance;
 			LogLineBuilder lineBuilder = GetOrCreateLineBuilder(settings.FileFormatString, settings.PlacementReplacers);
 			string stateName = typeof(TState).Name;
-			lineBuilder.Reset();
-			lineBuilder.SetLogLevel(logLevel)
-				.SetScopes(scopes)
-				.SetTag(Tag)
-				.SetStateName(stateName)
-				.SetBody(message);
+			string log = lineBuilder.Render(logLevel, scopes, Tag, stateName, message);
 
 			using var stream = new StreamWriter(LoggerFileProvider.CurrentLogFilePath, true);
-			stream.WriteLine(lineBuilder.ToString());
-			lineBuilder.Reset();
+			stream.WriteLine(log);
 		}
 	}
 }
