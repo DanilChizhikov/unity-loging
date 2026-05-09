@@ -19,7 +19,7 @@ namespace DTech.Logging
 
 		public IDisposable BeginScope<TState>()
 		{
-			return BeginScope(nameof(TState));
+			return BeginScope(TypeNameCache<TState>.Name);
 		}
 
 		public IDisposable BeginScope(string state)
