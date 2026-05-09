@@ -11,12 +11,27 @@ namespace DTech.Logging
 		private const int QueueCapacity = 16384;
 		private const int JoinTimeoutMs = 2000;
 
+		private readonly struct LogCommand
+		{
+			public readonly string Line;
+			public readonly bool IsFlush;
+
+			private LogCommand(string line, bool isFlush)
+			{
+				Line = line;
+				IsFlush = isFlush;
+			}
+
+			public static LogCommand FromLine(string line) => new(line, false);
+			public static LogCommand Flush() => new(null, true);
+		}
+
 		private static readonly Lazy<BackgroundFileLogSink> _lazy =
 			new(() => new BackgroundFileLogSink(), LazyThreadSafetyMode.ExecutionAndPublication);
 
 		public static BackgroundFileLogSink Instance => _lazy.Value;
 
-		private readonly BlockingCollection<string> _queue;
+		private readonly BlockingCollection<LogCommand> _queue;
 		private readonly Thread _worker;
 
 		private string _currentPath;
@@ -24,7 +39,7 @@ namespace DTech.Logging
 
 		private BackgroundFileLogSink()
 		{
-			_queue = new BlockingCollection<string>(new ConcurrentQueue<string>(), QueueCapacity);
+			_queue = new BlockingCollection<LogCommand>(new ConcurrentQueue<LogCommand>(), QueueCapacity);
 			_worker = new Thread(WorkerLoop)
 			{
 				IsBackground = true,
@@ -43,19 +58,25 @@ namespace DTech.Logging
 				return;
 			}
 
-			_queue.TryAdd(line);
+			_queue.TryAdd(LogCommand.FromLine(line));
 		}
 
 		private void WorkerLoop()
 		{
 			try
 			{
-				foreach (string line in _queue.GetConsumingEnumerable())
+				foreach (LogCommand command in _queue.GetConsumingEnumerable())
 				{
 					try
 					{
+						if (command.IsFlush)
+						{
+							_writer?.Flush();
+							continue;
+						}
+
 						EnsureWriter(LoggerFileProvider.CurrentLogFilePath);
-						_writer?.WriteLine(line);
+						_writer?.WriteLine(command.Line);
 					}
 					catch (Exception ex)
 					{
@@ -97,12 +118,12 @@ namespace DTech.Logging
 
 		private void OnFocusChanged(bool hasFocus)
 		{
-			if (hasFocus)
+			if (hasFocus || _queue.IsAddingCompleted)
 			{
 				return;
 			}
 
-			try { _writer?.Flush(); } catch { /* ignore */ }
+			_queue.TryAdd(LogCommand.Flush());
 		}
 	}
 }
