@@ -25,19 +25,42 @@ namespace DTech.Logging.Tests
 		}
 		
 		[Test]
-		public void LogError_WithException_WritesErrorLogWithExceptionFirst()
+		public void LogError_WithException_AppendsExceptionAfterFormattedMessage()
 		{
 			var logger = new Logger("TestTag");
 			var ex = new InvalidOperationException("Boom");
-			var pattern = @"^\[ERROR\]\[TestTag\]\[LoggerTests\] Error occurred\. Exception: .*?, Value: 42$";
+			var pattern = @"^\[ERROR\]\[TestTag\]\[LoggerTests\] Error occurred\. Value: 42\nSystem\.InvalidOperationException: Boom";
 			var regex = new System.Text.RegularExpressions.Regex(pattern);
-			
+
 			LogAssert.Expect(LogType.Error, regex);
-			
+
 			logger.LogError<LoggerTests>(ex,
-				"Error occurred. Exception: {0}, Value: {1}",
+				"Error occurred. Value: {0}",
 				42);
-			
+		}
+
+		[Test]
+		public void LogError_WithExceptionAndPlainMessage_DoesNotThrowAndAppendsException()
+		{
+			var logger = new Logger("TestTag");
+			var ex = new InvalidOperationException("Boom");
+			var pattern = @"^\[ERROR\]\[TestTag\] Failed to load data\nSystem\.InvalidOperationException: Boom";
+			var regex = new System.Text.RegularExpressions.Regex(pattern);
+
+			LogAssert.Expect(LogType.Error, regex);
+
+			logger.LogError(ex, "Failed to load data");
+		}
+
+		[Test]
+		public void LogError_WithoutException_FormatsMessageOnly()
+		{
+			var logger = new Logger("TestTag");
+			const string Expected = "[ERROR][TestTag] Failed: code=500";
+
+			LogAssert.Expect(LogType.Error, Expected);
+
+			logger.LogError("Failed: code={0}", 500);
 		}
 		
 		[Test]
