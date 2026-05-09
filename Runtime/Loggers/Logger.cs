@@ -14,12 +14,12 @@ namespace DTech.Logging
 
 		public Logger(string tag, params ILogger[] loggers)
 		{
-			_loggers = loggers ?? LoggerUtility.GetDefaultLoggers(tag);
+			_loggers = loggers is { Length: > 0 } ? loggers : LoggerUtility.GetDefaultLoggers(tag);
 		}
 
 		public IDisposable BeginScope<TState>()
 		{
-			return BeginScope(nameof(TState));
+			return BeginScope(TypeNameCache<TState>.Name);
 		}
 
 		public IDisposable BeginScope(string state)

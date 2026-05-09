@@ -10,12 +10,11 @@ namespace DTech.Logging
 	internal abstract class InternalLoggerBase : ILogger
 	{
 		private const string ScopesSeparator = " > ";
-		private const string ScopePrefix = "Scope > ";
-		
+
 		internal AsyncLocal<LogScope> CurrentScope { get; }
-		
+
 		protected string Tag { get; }
-		
+
 		private LogLineBuilder _lineBuilder;
 		private string _lineBuilderFormat;
 		private IReadOnlyList<ILogPlacementReplacer> _lineBuilderReplacers;
@@ -25,15 +24,15 @@ namespace DTech.Logging
 			Tag = tag;
 			CurrentScope = new AsyncLocal<LogScope>();
 		}
-		
+
 		public IDisposable BeginScope<TState>()
 		{
-			return BeginScope(nameof(TState));
+			return BeginScope(TypeNameCache<TState>.Name);
 		}
 
 		public IDisposable BeginScope(string state)
 		{
-			var newScope = new LogScope(Tag, state, this, CurrentScope.Value);
+			var newScope = new LogScope(state, this, CurrentScope.Value);
 			CurrentScope.Value = newScope;
 			return newScope;
 		}
@@ -128,9 +127,8 @@ namespace DTech.Logging
 				traversal = traversal.Parent;
 			}
 
-			int totalLength = ScopePrefix.Length + totalNamesLength + (scopeCount - 1) * ScopesSeparator.Length;
+			int totalLength = totalNamesLength + (scopeCount - 1) * ScopesSeparator.Length;
 			var builder = new StringBuilder(totalLength);
-			builder.Append(ScopePrefix);
 			for (int i = 0; i < scopeCount; i++)
 			{
 				if (i > 0)
