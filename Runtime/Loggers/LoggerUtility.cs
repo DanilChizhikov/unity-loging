@@ -26,6 +26,15 @@ namespace DTech.Logging
 			// Force the assembly scan + factory build to happen during scene load
 			// (typically behind a splash) instead of on the first log call mid-gameplay.
 			_ = _cachedLoggerFactories.Value;
+
+			// Touch Unity APIs that are main-thread-only here, while we are guaranteed
+			// to run on the main thread. Without this, the first log call from a
+			// background thread would force LoggerFileProvider's static ctor to read
+			// Application.persistentDataPath off-main-thread (UnityException on device)
+			// and Resources.Load to run off-main-thread.
+			_ = LoggerSettings.Instance;
+			_ = LoggerFileProvider.CurrentLogFilePath;
+			_ = BackgroundFileLogSink.Instance;
 		}
 
 		public static ILogger[] GetDefaultLoggers(string tag)
