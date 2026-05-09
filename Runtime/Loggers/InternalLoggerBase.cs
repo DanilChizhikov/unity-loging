@@ -1,15 +1,12 @@
 using System;
 using System.Buffers;
 using System.Collections.Generic;
-using System.Threading;
 using DTech.Logging.Placements;
 
 namespace DTech.Logging
 {
 	internal abstract class InternalLoggerBase : ILogger
 	{
-		internal AsyncLocal<LogScope> CurrentScope { get; }
-
 		protected string Tag { get; }
 
 		private LogLineBuilder _lineBuilder;
@@ -19,39 +16,37 @@ namespace DTech.Logging
 		public InternalLoggerBase(string tag)
 		{
 			Tag = tag;
-			CurrentScope = new AsyncLocal<LogScope>();
 		}
-
-		public IDisposable BeginScope<TState>()
-		{
-			return BeginScope(TypeNameCache<TState>.Name);
-		}
-
-		public IDisposable BeginScope(string state)
-		{
-			var newScope = new LogScope(Tag, state, this, CurrentScope.Value);
-			CurrentScope.Value = newScope;
-			return newScope;
-		}
+		
+		public IDisposable BeginScope<TState>() => NullScope.Instance;
+		public IDisposable BeginScope(string state) => NullScope.Instance;
 
 		public abstract bool IsEnabled(LogLevel logLevel);
 
 		public void Log<TState>(LogLevel logLevel, Exception exception, string message, object[] args)
 		{
-			string scopes = BuildScopesString(CurrentScope.Value);
-			SendLog<TState>(logLevel, exception, message, args, scopes);
+			SendLog<TState>(logLevel, exception, message, args, scopes: string.Empty);
 		}
 
 		public void Log<TState>(LogLevel logLevel, Exception exception, string message)
 		{
-			string scopes = BuildScopesString(CurrentScope.Value);
+			SendLog<TState>(logLevel, exception, message, scopes: string.Empty);
+		}
+
+		internal void Log<TState>(LogLevel logLevel, Exception exception, string message, object[] args, string scopes)
+		{
+			SendLog<TState>(logLevel, exception, message, args, scopes);
+		}
+
+		internal void Log<TState>(LogLevel logLevel, Exception exception, string message, string scopes)
+		{
 			SendLog<TState>(logLevel, exception, message, scopes);
 		}
-		
+
 		protected abstract void SendLog<TState>(LogLevel logLevel, Exception exception, string message, object[] args, string scopes);
-		
+
 		protected abstract void SendLog<TState>(LogLevel logLevel, Exception exception, string message, string scopes);
-		
+
 		protected static string FormatMessage(Exception exception, string message, object[] args)
 		{
 			string formatted = (args == null || args.Length == 0)
@@ -65,7 +60,7 @@ namespace DTech.Logging
 		{
 			return exception == null ? message : message + "\n" + exception;
 		}
-		
+
 		protected LogLineBuilder GetOrCreateLineBuilder(string format, IReadOnlyList<ILogPlacementReplacer> replacers)
 		{
 			if (_lineBuilder != null &&
@@ -79,11 +74,6 @@ namespace DTech.Logging
 			_lineBuilderFormat = format;
 			_lineBuilderReplacers = replacers;
 			return _lineBuilder;
-		}
-
-		private static string BuildScopesString(LogScope current)
-		{
-			return current?.Scopes ?? string.Empty;
 		}
 
 		private static string FormatMessageWithoutException(string message, object[] args)

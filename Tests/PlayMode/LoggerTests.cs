@@ -67,7 +67,7 @@ namespace DTech.Logging.Tests
 		public void BeginScope_AddsScopeInfoToLog()
 		{
 			var logger = new Logger("TestTag");
-			const string Expected = "[INFO][Scope > TestTag > ScopeName][TestTag] Message in scope";
+			const string Expected = "[INFO][Scope > ScopeName][TestTag] Message in scope";
 			
 			using (logger.BeginScope("ScopeName"))
 			{
@@ -80,7 +80,7 @@ namespace DTech.Logging.Tests
 		public void NestedScopes_AreOrderedFromOuterToInner()
 		{
 			var logger = new Logger("TestTag");
-			const string Expected = "[INFO][Scope > TestTag > Outer > TestTag > Inner][TestTag] Nested";
+			const string Expected = "[INFO][Scope > Outer > Inner][TestTag] Nested";
 			
 			using (logger.BeginScope("Outer"))
 			{
