@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using NUnit.Framework;
 using Unity.PerformanceTesting;
 using UnityEngine.TestTools;
@@ -119,6 +121,31 @@ namespace DTech.Logging.Tests.Performance
                 .IterationsPerMeasurement(1)
                 .GC()
                 .Run();
+        }
+
+        [Test]
+        public void LogLineBuilder_Render_IsThreadSafe_NoCrossContamination()
+        {
+            var builder = new LogLineBuilder(
+                "[LOG_LEVEL][LOG_TAG]",
+                Array.Empty<Placements.ILogPlacementReplacer>());
+
+            var failures = new ConcurrentBag<string>();
+            const int Iterations = 10000;
+
+            Parallel.For(0, Iterations, i =>
+            {
+                string tag = "Tag" + i;
+                string body = "body" + i;
+                string output = builder.Render(LogLevel.Information, string.Empty, tag, nameof(NullState), body);
+                string expected = "[INFO][" + tag + "] " + body;
+                if (!string.Equals(output, expected, StringComparison.Ordinal))
+                {
+                    failures.Add($"i={i}: expected='{expected}' actual='{output}'");
+                }
+            });
+
+            Assert.That(failures, Is.Empty, () => "Cross-contamination detected:\n" + string.Join("\n", failures));
         }
 
         [Test, Performance]

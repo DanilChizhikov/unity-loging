@@ -18,16 +18,8 @@ namespace DTech.Logging.Tests.Performance
             LoggerSettings settings = LoggerSettings.Instance;
             LogLineBuilder lineBuilder = GetOrCreateLineBuilder(settings.ConsoleFormatString, settings.PlacementReplacers);
             string logBody = FormatMessage(exception, message, args);
-            string stateName = typeof(TState).Name;
-            lineBuilder.Reset();
-            string log = lineBuilder.SetLogLevel(logLevel)
-                .SetScopes(scopes)
-                .SetTag(Tag)
-                .SetStateName(stateName)
-                .SetBody(logBody)
-                .ToString();
-
-            lineBuilder.Reset();
+            string stateName = StateName<TState>.Value;
+            _ = lineBuilder.Render(logLevel, scopes, Tag, stateName, logBody);
         }
 
         protected override void SendLog<TState>(LogLevel logLevel, Exception exception, string message, string scopes)
@@ -35,16 +27,8 @@ namespace DTech.Logging.Tests.Performance
             LoggerSettings settings = LoggerSettings.Instance;
             LogLineBuilder lineBuilder = GetOrCreateLineBuilder(settings.ConsoleFormatString, settings.PlacementReplacers);
             string logBody = FormatMessage(exception, message);
-            string stateName = typeof(TState).Name;
-            lineBuilder.Reset();
-            string log = lineBuilder.SetLogLevel(logLevel)
-                .SetScopes(scopes)
-                .SetTag(Tag)
-                .SetStateName(stateName)
-                .SetBody(logBody)
-                .ToString();
-
-            lineBuilder.Reset();
+            string stateName = StateName<TState>.Value;
+            _ = lineBuilder.Render(logLevel, scopes, Tag, stateName, logBody);
         }
     }
 }
