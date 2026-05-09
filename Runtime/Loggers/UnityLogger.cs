@@ -11,10 +11,6 @@ namespace DTech.Logging
 
 		public override bool IsEnabled(LogLevel logLevel)
 		{
-			#if DEVELOPMENT_BUILD || UNITY_EDITOR
-			return logLevel != LogLevel.None;
-			#endif
-
 			return LoggerSettings.Instance.IsEnabled(logLevel);
 		}
 

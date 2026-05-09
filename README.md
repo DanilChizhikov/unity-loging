@@ -44,15 +44,12 @@ For example `https://github.com/DanilChizhikov/unity-loging.git#v1.0.0`.
 
 ## Features
 - Multiple log levels (Trace, Debug, Information, Warning, Error, Critical)
-- Structured logging with named parameters
+- Positional `string.Format`-style placeholders in messages
 - Scoped logging for grouping related operations
 - Exception logging with stack traces
-- Thread-safe implementation
 - Extensible logging pipeline
-- Compatible with Microsoft.Extensions.Logging patterns
 - Log format template
 - Memory-efficient template parsing with caching
-- Zero-allocation scopes via ArrayPool
 
 ## Settings
 For control log on release builds, you can use the `LoggerSettings`.

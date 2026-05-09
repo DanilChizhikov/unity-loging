@@ -39,7 +39,8 @@ namespace DTech.Logging
 		private const string LogTagPlacement = "LOG_TAG";
 		private const string LogStatePlacement = "LOG_STATE";
 		
-		private readonly string _template;
+		private const int DefaultBuilderCapacity = 128;
+
 		private readonly List<ILogPlacementReplacer> _replacers;
 		private readonly TemplateSegment[] _segments;
 
@@ -48,10 +49,9 @@ namespace DTech.Logging
 		private string _tag;
 		private string _stateName;
 		private string _body;
-		
+
 		public LogLineBuilder(string template, IEnumerable<ILogPlacementReplacer> replacers)
 		{
-			_template = template;
 			_replacers = new List<ILogPlacementReplacer>(replacers);
 			_segments = ParseTemplate(template);
 		}
@@ -88,7 +88,7 @@ namespace DTech.Logging
 
 		public override string ToString()
 		{
-			if (string.IsNullOrEmpty(_template))
+			if (_segments.Length == 0)
 			{
 				return _body;
 			}
@@ -120,7 +120,7 @@ namespace DTech.Logging
 
 		private string ReplaceBuiltInPlacements(LogInfo logInfo)
 		{
-			var builder = new StringBuilder(_template.Length + 16);
+			var builder = new StringBuilder(DefaultBuilderCapacity);
 			for (int i = 0; i < _segments.Length; i++)
 			{
 				TemplateSegment segment = _segments[i];
