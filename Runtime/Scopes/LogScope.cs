@@ -5,10 +5,15 @@ namespace DTech.Logging
 {
 	internal sealed class LogScope : IDisposable
 	{
+		private const string ScopesSeparator = " > ";
+		private const string ScopePrefix = "Scope > ";
+
 		private readonly InternalLoggerBase _logger;
 
 		public string Name { get; }
-		
+
+		public string Scopes { get; }
+
 		[CanBeNull]
 		public LogScope Parent { get; }
 
@@ -20,8 +25,11 @@ namespace DTech.Logging
 			{
 				throw new ArgumentNullException(nameof(blockName));
 			}
-			
-			Name = string.IsNullOrEmpty(tag) ? $"{blockName}" : $"{tag} > {blockName}";
+
+			Name = string.IsNullOrEmpty(tag) ? blockName : tag + ScopesSeparator + blockName;
+			Scopes = parent == null
+				? ScopePrefix + Name
+				: parent.Scopes + ScopesSeparator + Name;
 			_logger = logger;
 			Parent = parent;
 			_isDisposed = false;

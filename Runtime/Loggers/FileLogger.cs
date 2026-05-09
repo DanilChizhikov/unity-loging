@@ -43,7 +43,7 @@ namespace DTech.Logging
 		{
 			LoggerSettings settings = LoggerSettings.Instance;
 			LogLineBuilder lineBuilder = GetOrCreateLineBuilder(settings.FileFormatString, settings.PlacementReplacers);
-			string stateName = typeof(TState).Name;
+			string stateName = StateName<TState>.Value;
 			lineBuilder.Reset();
 			lineBuilder.SetLogLevel(logLevel)
 				.SetScopes(scopes)
