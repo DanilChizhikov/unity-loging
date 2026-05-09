@@ -9,16 +9,30 @@ namespace DTech.Logging
 	public sealed class LoggerSettings : ScriptableObject
 	{
 		private static volatile LoggerSettings _instance;
+		private static volatile bool _loadAttempted;
 
 		public static LoggerSettings Instance
 		{
 			get
 			{
 				LoggerSettings inst = _instance;
+				if (inst != null)
+				{
+					return inst;
+				}
+
+				if (_loadAttempted)
+				{
+					return null;
+				}
+
+				inst = Resources.Load<LoggerSettings>(nameof(LoggerSettings));
+				_instance = inst;
+				_loadAttempted = true;
+
 				if (inst == null)
 				{
-					inst = Resources.Load<LoggerSettings>(nameof(LoggerSettings));
-					_instance = inst;
+					Debug.LogError($"[{nameof(LoggerSettings)}] Asset '{nameof(LoggerSettings)}' was not found in any Resources folder. Logging will be disabled.");
 				}
 
 				return inst;
