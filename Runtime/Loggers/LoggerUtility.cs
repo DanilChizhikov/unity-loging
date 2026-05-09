@@ -35,6 +35,7 @@ namespace DTech.Logging
 			_ = LoggerSettings.Instance;
 			_ = LoggerFileProvider.CurrentLogFilePath;
 			_ = BackgroundFileLogSink.Instance;
+			BackgroundFileLogSink.EnsureLifecycleHook();
 		}
 
 		public static ILogger[] GetDefaultLoggers(string tag)

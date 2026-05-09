@@ -11,6 +11,7 @@ namespace DTech.Logging
 		private const int QueueCapacity = 16384;
 		private const int JoinTimeoutMs = 2000;
 		private const int DropReportInterval = 256;
+		private const int PauseFlushTimeoutMs = 200;
 
 		private readonly struct LogCommand
 		{
@@ -30,7 +31,24 @@ namespace DTech.Logging
 		private static readonly Lazy<BackgroundFileLogSink> _lazy =
 			new(() => new BackgroundFileLogSink(), LazyThreadSafetyMode.ExecutionAndPublication);
 
+		private static BackgroundFileLogSinkLifecycle _lifecycleHook;
+
 		public static BackgroundFileLogSink Instance => _lazy.Value;
+
+		public static void EnsureLifecycleHook()
+		{
+			if (_lifecycleHook != null)
+			{
+				return;
+			}
+
+			var go = new GameObject($"~{nameof(BackgroundFileLogSink)}Lifecycle")
+			{
+				hideFlags = HideFlags.HideAndDontSave,
+			};
+			UnityEngine.Object.DontDestroyOnLoad(go);
+			_lifecycleHook = go.AddComponent<BackgroundFileLogSinkLifecycle>();
+		}
 
 		private readonly BlockingCollection<LogCommand> _queue;
 		private readonly Thread _worker;
@@ -64,6 +82,22 @@ namespace DTech.Logging
 			if (!_queue.TryAdd(LogCommand.FromLine(line)))
 			{
 				Interlocked.Increment(ref _droppedCount);
+			}
+		}
+
+		public void FlushSynchronously(int timeoutMs)
+		{
+			if (_queue.IsAddingCompleted)
+			{
+				return;
+			}
+
+			_queue.TryAdd(LogCommand.Flush());
+
+			int deadline = Environment.TickCount + Math.Max(0, timeoutMs);
+			while (Environment.TickCount < deadline && _queue.Count > 0)
+			{
+				Thread.Sleep(1);
 			}
 		}
 
@@ -149,6 +183,19 @@ namespace DTech.Logging
 			}
 
 			_queue.TryAdd(LogCommand.Flush());
+		}
+
+		private sealed class BackgroundFileLogSinkLifecycle : MonoBehaviour
+		{
+			private void OnApplicationPause(bool pauseStatus)
+			{
+				if (!pauseStatus)
+				{
+					return;
+				}
+
+				Instance.FlushSynchronously(PauseFlushTimeoutMs);
+			}
 		}
 	}
 }
