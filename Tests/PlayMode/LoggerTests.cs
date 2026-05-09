@@ -44,12 +44,12 @@ namespace DTech.Logging.Tests
 		{
 			var logger = new Logger("TestTag");
 			var ex = new InvalidOperationException("Boom");
-			var pattern = @"^\[ERROR\]\[TestTag\] Failed to load data\nSystem\.InvalidOperationException: Boom";
+			var pattern = @"^\[ERROR\]\[TestTag\] Failed to load data System\.InvalidOperationException: Boom";
 			var regex = new System.Text.RegularExpressions.Regex(pattern);
 
 			LogAssert.Expect(LogType.Error, regex);
 
-			logger.LogError(ex, "Failed to load data");
+			logger.LogError("Failed to load data {0}", ex.ToString());
 		}
 
 		[Test]
