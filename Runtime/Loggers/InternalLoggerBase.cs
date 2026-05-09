@@ -17,9 +17,7 @@ namespace DTech.Logging
 		{
 			Tag = tag;
 		}
-
-		// Scope tracking lives on the outer Logger now. Internal loggers
-		// expose no-op scope handles to satisfy ILogger.
+		
 		public IDisposable BeginScope<TState>() => NullScope.Instance;
 		public IDisposable BeginScope(string state) => NullScope.Instance;
 
@@ -51,38 +49,22 @@ namespace DTech.Logging
 
 		protected static string FormatMessage(Exception exception, string message, object[] args)
 		{
-			if (args == null || args.Length == 0)
-			{
-				if (exception == null)
-				{
-					return message;
-				}
+			string formatted = (args == null || args.Length == 0)
+				? message
+				: FormatMessageWithoutException(message, args);
 
-				return string.Format(message, exception.ToString());
-			}
-
-			if (exception == null)
-			{
-				return FormatMessageWithoutException(message, args);
-			}
-
-			return FormatMessageWithException(message, exception, args);
+			return exception == null ? formatted : formatted + "\n" + exception;
 		}
 
 		protected static string FormatMessage(Exception exception, string message)
 		{
-			if (exception == null)
-			{
-				return message;
-			}
-
-			return string.Format(message, exception.ToString());
+			return exception == null ? message : message + "\n" + exception;
 		}
 
 		protected LogLineBuilder GetOrCreateLineBuilder(string format, IReadOnlyList<ILogPlacementReplacer> replacers)
 		{
 			if (_lineBuilder != null &&
-			    string.Equals(_lineBuilderFormat, format, StringComparison.Ordinal) &&
+			    ReferenceEquals(_lineBuilderFormat, format) &&
 			    ReferenceEquals(_lineBuilderReplacers, replacers))
 			{
 				return _lineBuilder;
@@ -103,38 +85,6 @@ namespace DTech.Logging
 				3 => string.Format(message, args[0], args[1], args[2]),
 				_ => string.Format(message, args),
 			};
-		}
-
-		private static string FormatMessageWithException(string message, Exception exception, object[] args)
-		{
-			string exceptionString = exception.ToString();
-			if (args.Length == 1)
-			{
-				return string.Format(message, exceptionString, args[0]);
-			}
-
-			if (args.Length == 2)
-			{
-				return string.Format(message, exceptionString, args[0], args[1]);
-			}
-
-			int length = args.Length + 1;
-			object[] pooledArgs = ArrayPool<object>.Shared.Rent(length);
-			try
-			{
-				pooledArgs[0] = exceptionString;
-				for (int i = 0; i < args.Length; i++)
-				{
-					pooledArgs[i + 1] = args[i];
-				}
-
-				return string.Format(message, pooledArgs);
-			}
-			finally
-			{
-				Array.Clear(pooledArgs, 0, length);
-				ArrayPool<object>.Shared.Return(pooledArgs);
-			}
 		}
 	}
 }

@@ -37,23 +37,24 @@ namespace DTech.Logging
 			SendLog<TState>(logLevel, logBody, scopes);
 		}
 		
-		private bool IsLogEnabled() => !Application.isEditor && LoggerSettings.Instance.IsFileLoggingEnabled;
+		private bool IsLogEnabled()
+		{
+#if UNITY_EDITOR
+			return false;
+#else
+			return LoggerSettings.Instance.IsFileLoggingEnabled;
+#endif
+		}
 
 		private void SendLog<TState>(LogLevel logLevel, string message, string scopes)
 		{
 			LoggerSettings settings = LoggerSettings.Instance;
 			LogLineBuilder lineBuilder = GetOrCreateLineBuilder(settings.FileFormatString, settings.PlacementReplacers);
-			string stateName = typeof(TState).Name;
-			lineBuilder.Reset();
-			lineBuilder.SetLogLevel(logLevel)
-				.SetScopes(scopes)
-				.SetTag(Tag)
-				.SetStateName(stateName)
-				.SetBody(message);
+			string stateName = StateName<TState>.Value;
+			string log = lineBuilder.Render(logLevel, scopes, Tag, stateName, message);
 
 			using var stream = new StreamWriter(LoggerFileProvider.CurrentLogFilePath, true);
-			stream.WriteLine(lineBuilder.ToString());
-			lineBuilder.Reset();
+			stream.WriteLine(log);
 		}
 	}
 }
