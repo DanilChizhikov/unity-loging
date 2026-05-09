@@ -10,6 +10,7 @@ namespace DTech.Logging
 	{
 		private const int QueueCapacity = 16384;
 		private const int JoinTimeoutMs = 2000;
+		private const int DropReportInterval = 256;
 
 		private readonly struct LogCommand
 		{
@@ -36,6 +37,8 @@ namespace DTech.Logging
 
 		private string _currentPath;
 		private StreamWriter _writer;
+		private long _droppedCount;
+		private int _writesSinceDropReport;
 
 		private BackgroundFileLogSink()
 		{
@@ -58,7 +61,10 @@ namespace DTech.Logging
 				return;
 			}
 
-			_queue.TryAdd(LogCommand.FromLine(line));
+			if (!_queue.TryAdd(LogCommand.FromLine(line)))
+			{
+				Interlocked.Increment(ref _droppedCount);
+			}
 		}
 
 		private void WorkerLoop()
@@ -77,18 +83,37 @@ namespace DTech.Logging
 
 						EnsureWriter(LoggerFileProvider.CurrentLogFilePath);
 						_writer?.WriteLine(command.Line);
+
+						if (++_writesSinceDropReport >= DropReportInterval)
+						{
+							_writesSinceDropReport = 0;
+							ReportDroppedIfAny();
+						}
 					}
 					catch (Exception ex)
 					{
 						Debug.LogWarning($"[{nameof(BackgroundFileLogSink)}] write failed: {ex.Message}");
 					}
 				}
+
+				try { ReportDroppedIfAny(); } catch { /* ignore */ }
 			}
 			finally
 			{
 				try { _writer?.Flush(); } catch { /* ignore */ }
 				try { _writer?.Dispose(); } catch { /* ignore */ }
 			}
+		}
+
+		private void ReportDroppedIfAny()
+		{
+			long dropped = Interlocked.Exchange(ref _droppedCount, 0);
+			if (dropped <= 0 || _writer == null)
+			{
+				return;
+			}
+
+			_writer.WriteLine($"[{nameof(BackgroundFileLogSink)}] dropped {dropped} entries");
 		}
 
 		private void EnsureWriter(string path)
