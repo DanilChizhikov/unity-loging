@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Threading;
 using UnityEngine;
 
@@ -12,12 +13,15 @@ namespace DTech.Logging
 			public string StackTrace;
 			public LogType LogType;
 		}
-		
+
 		private const string ContextNullException = "Unity SynchronizationContext is null";
-		
+
 		public event Application.LogCallback OnLogMessageReceivedThreaded;
 
 		private readonly SynchronizationContext _unityContext;
+		private readonly ConcurrentQueue<LogRecord> _queue;
+		private readonly SendOrPostCallback _drainCallback;
+		private int _drainPosted;
 
 		public LoggingHandlerThreadSafe()
 		{
@@ -26,7 +30,9 @@ namespace DTech.Logging
 			{
 				throw new NullReferenceException(ContextNullException);
 			}
-            
+
+			_queue = new ConcurrentQueue<LogRecord>();
+			_drainCallback = DrainQueue;
 			Application.logMessageReceivedThreaded += LogMessageReceivedThreadedHandler;
 		}
 
@@ -34,21 +40,30 @@ namespace DTech.Logging
 		{
 			Application.logMessageReceivedThreaded -= LogMessageReceivedThreadedHandler;
 		}
-		
+
 		private void LogMessageReceivedThreadedHandler(string condition, string stacktrace, LogType type)
 		{
-			_unityContext.Post(ContextCallback, new LogRecord
+			_queue.Enqueue(new LogRecord
 			{
 				Condition = condition,
 				StackTrace = stacktrace,
 				LogType = type,
 			});
+
+			if (Interlocked.Exchange(ref _drainPosted, 1) == 0)
+			{
+				_unityContext.Post(_drainCallback, null);
+			}
 		}
-		
-		private void ContextCallback(object state)
+
+		private void DrainQueue(object state)
 		{
-			var record = (LogRecord)state;
-			OnLogMessageReceivedThreaded?.Invoke(record.Condition, record.StackTrace, record.LogType);
+			Interlocked.Exchange(ref _drainPosted, 0);
+
+			while (_queue.TryDequeue(out LogRecord record))
+			{
+				OnLogMessageReceivedThreaded?.Invoke(record.Condition, record.StackTrace, record.LogType);
+			}
 		}
 	}
 }

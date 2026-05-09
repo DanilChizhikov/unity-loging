@@ -1,21 +1,14 @@
 using System;
 using System.Buffers;
 using System.Collections.Generic;
-using System.Text;
-using System.Threading;
 using DTech.Logging.Placements;
 
 namespace DTech.Logging
 {
 	internal abstract class InternalLoggerBase : ILogger
 	{
-		private const string ScopesSeparator = " > ";
-		private const string ScopePrefix = "Scope > ";
-		
-		internal AsyncLocal<LogScope> CurrentScope { get; }
-		
 		protected string Tag { get; }
-		
+
 		private LogLineBuilder _lineBuilder;
 		private string _lineBuilderFormat;
 		private IReadOnlyList<ILogPlacementReplacer> _lineBuilderReplacers;
@@ -23,73 +16,55 @@ namespace DTech.Logging
 		public InternalLoggerBase(string tag)
 		{
 			Tag = tag;
-			CurrentScope = new AsyncLocal<LogScope>();
 		}
 		
-		public IDisposable BeginScope<TState>()
-		{
-			return BeginScope(nameof(TState));
-		}
-
-		public IDisposable BeginScope(string state)
-		{
-			var newScope = new LogScope(Tag, state, this, CurrentScope.Value);
-			CurrentScope.Value = newScope;
-			return newScope;
-		}
+		public IDisposable BeginScope<TState>() => NullScope.Instance;
+		public IDisposable BeginScope(string state) => NullScope.Instance;
 
 		public abstract bool IsEnabled(LogLevel logLevel);
 
 		public void Log<TState>(LogLevel logLevel, Exception exception, string message, object[] args)
 		{
-			string scopes = BuildScopesString(CurrentScope.Value);
-			SendLog<TState>(logLevel, exception, message, args, scopes);
+			SendLog<TState>(logLevel, exception, message, args, scopes: string.Empty);
 		}
 
 		public void Log<TState>(LogLevel logLevel, Exception exception, string message)
 		{
-			string scopes = BuildScopesString(CurrentScope.Value);
+			SendLog<TState>(logLevel, exception, message, scopes: string.Empty);
+		}
+
+		internal void Log<TState>(LogLevel logLevel, Exception exception, string message, object[] args, string scopes)
+		{
+			SendLog<TState>(logLevel, exception, message, args, scopes);
+		}
+
+		internal void Log<TState>(LogLevel logLevel, Exception exception, string message, string scopes)
+		{
 			SendLog<TState>(logLevel, exception, message, scopes);
 		}
-		
+
 		protected abstract void SendLog<TState>(LogLevel logLevel, Exception exception, string message, object[] args, string scopes);
-		
+
 		protected abstract void SendLog<TState>(LogLevel logLevel, Exception exception, string message, string scopes);
-		
+
 		protected static string FormatMessage(Exception exception, string message, object[] args)
 		{
-			if (args == null || args.Length == 0)
-			{
-				if (exception == null)
-				{
-					return message;
-				}
+			string formatted = (args == null || args.Length == 0)
+				? message
+				: FormatMessageWithoutException(message, args);
 
-				return string.Format(message, exception.ToString());
-			}
-
-			if (exception == null)
-			{
-				return FormatMessageWithoutException(message, args);
-			}
-
-			return FormatMessageWithException(message, exception, args);
+			return exception == null ? formatted : formatted + "\n" + exception;
 		}
-		
+
 		protected static string FormatMessage(Exception exception, string message)
 		{
-			if (exception == null)
-			{
-				return message;
-			}
-
-			return string.Format(message, exception.ToString());
+			return exception == null ? message : message + "\n" + exception;
 		}
-		
+
 		protected LogLineBuilder GetOrCreateLineBuilder(string format, IReadOnlyList<ILogPlacementReplacer> replacers)
 		{
 			if (_lineBuilder != null &&
-			    string.Equals(_lineBuilderFormat, format, StringComparison.Ordinal) &&
+			    ReferenceEquals(_lineBuilderFormat, format) &&
 			    ReferenceEquals(_lineBuilderReplacers, replacers))
 			{
 				return _lineBuilder;
@@ -101,53 +76,6 @@ namespace DTech.Logging
 			return _lineBuilder;
 		}
 
-		private static string BuildScopesString(LogScope current)
-		{
-			if (current == null)
-			{
-				return string.Empty;
-			}
-
-			int scopeCount = 0;
-			LogScope traversal = current;
-			while (traversal != null)
-			{
-				scopeCount++;
-				traversal = traversal.Parent;
-			}
-
-			string[] names = ArrayPool<string>.Shared.Rent(scopeCount);
-			int index = scopeCount;
-			int totalNamesLength = 0;
-			traversal = current;
-			while (traversal != null)
-			{
-				string name = traversal.Name;
-				names[--index] = name;
-				totalNamesLength += name.Length;
-				traversal = traversal.Parent;
-			}
-
-			int totalLength = ScopePrefix.Length + totalNamesLength + (scopeCount - 1) * ScopesSeparator.Length;
-			var builder = new StringBuilder(totalLength);
-			builder.Append(ScopePrefix);
-			for (int i = 0; i < scopeCount; i++)
-			{
-				if (i > 0)
-				{
-					builder.Append(ScopesSeparator);
-				}
-
-				builder.Append(names[i]);
-			}
-
-			string log = builder.ToString();
-			Array.Clear(names, 0, scopeCount);
-			ArrayPool<string>.Shared.Return(names);
-
-			return log;
-		}
-
 		private static string FormatMessageWithoutException(string message, object[] args)
 		{
 			return args.Length switch
@@ -157,38 +85,6 @@ namespace DTech.Logging
 				3 => string.Format(message, args[0], args[1], args[2]),
 				_ => string.Format(message, args),
 			};
-		}
-
-		private static string FormatMessageWithException(string message, Exception exception, object[] args)
-		{
-			string exceptionString = exception.ToString();
-			if (args.Length == 1)
-			{
-				return string.Format(message, exceptionString, args[0]);
-			}
-
-			if (args.Length == 2)
-			{
-				return string.Format(message, exceptionString, args[0], args[1]);
-			}
-
-			int length = args.Length + 1;
-			object[] pooledArgs = ArrayPool<object>.Shared.Rent(length);
-			try
-			{
-				pooledArgs[0] = exceptionString;
-				for (int i = 0; i < args.Length; i++)
-				{
-					pooledArgs[i + 1] = args[i];
-				}
-
-				return string.Format(message, pooledArgs);
-			}
-			finally
-			{
-				Array.Clear(pooledArgs, 0, length);
-				ArrayPool<object>.Shared.Return(pooledArgs);
-			}
 		}
 	}
 }
