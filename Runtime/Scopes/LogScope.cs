@@ -14,14 +14,14 @@ namespace DTech.Logging
 
 		private bool _isDisposed;
 
-		public LogScope(string tag, string blockName, InternalLoggerBase logger, [CanBeNull] LogScope parent)
+		public LogScope(string blockName, InternalLoggerBase logger, [CanBeNull] LogScope parent)
 		{
 			if (string.IsNullOrEmpty(blockName))
 			{
 				throw new ArgumentNullException(nameof(blockName));
 			}
-			
-			Name = string.IsNullOrEmpty(tag) ? $"{blockName}" : $"{tag} > {blockName}";
+
+			Name = blockName;
 			_logger = logger;
 			Parent = parent;
 			_isDisposed = false;
