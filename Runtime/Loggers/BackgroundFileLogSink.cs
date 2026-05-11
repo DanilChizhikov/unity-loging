@@ -11,20 +11,24 @@ namespace DTech.Logging
 		private const int QueueCapacity = 16384;
 		private const int JoinTimeoutMs = 2000;
 		private const int DropReportInterval = 256;
+		private const int PauseFlushTimeoutMs = 200;
 
 		private readonly struct LogCommand
 		{
 			public readonly string Line;
 			public readonly bool IsFlush;
+			public readonly ManualResetEventSlim Signal;
 
-			private LogCommand(string line, bool isFlush)
+			private LogCommand(string line, bool isFlush, ManualResetEventSlim signal)
 			{
 				Line = line;
 				IsFlush = isFlush;
+				Signal = signal;
 			}
 
-			public static LogCommand FromLine(string line) => new(line, false);
-			public static LogCommand Flush() => new(null, true);
+			public static LogCommand FromLine(string line) => new(line, false, null);
+			public static LogCommand Flush() => new(null, true, null);
+			public static LogCommand FlushWithSignal(ManualResetEventSlim signal) => new(null, true, signal);
 		}
 
 		private static readonly Lazy<BackgroundFileLogSink> _lazy =
@@ -97,6 +101,23 @@ namespace DTech.Logging
 			}
 		}
 
+		public void FlushAndWait(int timeoutMs)
+		{
+			if (_queue.IsAddingCompleted)
+			{
+				return;
+			}
+
+			using var signal = new ManualResetEventSlim(false);
+			if (!_queue.TryAdd(LogCommand.FlushWithSignal(signal)))
+			{
+				Interlocked.Increment(ref _droppedCount);
+				return;
+			}
+
+			signal.Wait(timeoutMs);
+		}
+
 		private void WorkerLoop()
 		{
 			try
@@ -123,6 +144,10 @@ namespace DTech.Logging
 					catch (Exception ex)
 					{
 						Debug.LogWarning($"[{nameof(BackgroundFileLogSink)}] write failed: {ex.Message}");
+					}
+					finally
+					{
+						command.Signal?.Set();
 					}
 				}
 
@@ -178,7 +203,7 @@ namespace DTech.Logging
 				return;
 			}
 
-			RequestFlush();
+			FlushAndWait(PauseFlushTimeoutMs);
 		}
 
 		private sealed class BackgroundFileLogSinkLifecycle : MonoBehaviour
@@ -190,7 +215,7 @@ namespace DTech.Logging
 					return;
 				}
 
-				Instance.RequestFlush();
+				Instance.FlushAndWait(PauseFlushTimeoutMs);
 			}
 		}
 	}
