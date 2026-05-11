@@ -11,7 +11,12 @@ namespace DTech.Logging
 
 		public override bool IsEnabled(LogLevel logLevel)
 		{
-			return IsLogEnabled() && LoggerSettings.Instance.IsEnabled(logLevel);
+#if UNITY_EDITOR
+			return false;
+#else
+			LoggerSettings settings = LoggerSettings.Instance;
+			return settings != null && settings.IsFileLoggingEnabled && settings.IsEnabled(logLevel);
+#endif
 		}
 
 		protected override void SendLog<TState>(LogLevel logLevel, Exception exception, string message, object[] args, string scopes)
@@ -41,7 +46,8 @@ namespace DTech.Logging
 #if UNITY_EDITOR
 			return false;
 #else
-			return LoggerSettings.Instance.IsFileLoggingEnabled;
+			LoggerSettings settings = LoggerSettings.Instance;
+			return settings != null && settings.IsFileLoggingEnabled;
 #endif
 		}
 
