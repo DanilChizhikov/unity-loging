@@ -181,7 +181,14 @@ namespace DTech.Logging
 					}
 				}
 
-				try { ReportDroppedIfAny(); } catch { /* ignore */ }
+				try
+				{
+					ReportDroppedIfAny();
+				}
+				catch (Exception ex)
+				{
+					Debug.LogWarning($"[{nameof(BackgroundFileLogSink)}] dropped report failed: {ex.Message}");
+				}
 			}
 			finally
 			{
