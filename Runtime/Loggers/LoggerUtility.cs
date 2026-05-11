@@ -28,6 +28,13 @@ namespace DTech.Logging
 		internal static bool IsOnMainThread => _mainThreadId != 0 && Thread.CurrentThread.ManagedThreadId == _mainThreadId;
 		internal static bool PrewarmCompleted => _prewarmCompleted;
 
+		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+		private static void ResetStatics()
+		{
+			_mainThreadId = 0;
+			_prewarmCompleted = false;
+		}
+
 		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
 		private static void Prewarm()
 		{

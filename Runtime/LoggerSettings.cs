@@ -11,6 +11,16 @@ namespace DTech.Logging
 		private static volatile LoggerSettings _instance;
 		private static volatile bool _loadAttempted;
 
+		// See BackgroundFileLogSink.ResetStatics: with domain reload disabled,
+		// statics survive between play sessions and a previously cached settings
+		// reference may now be a fake-null UnityEngine.Object. Force a re-load.
+		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+		private static void ResetStatics()
+		{
+			_instance = null;
+			_loadAttempted = false;
+		}
+
 		public static LoggerSettings Instance
 		{
 			get

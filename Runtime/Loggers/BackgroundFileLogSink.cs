@@ -31,9 +31,7 @@ namespace DTech.Logging
 			public static LogCommand FlushWithSignal(ManualResetEventSlim signal) => new(null, true, signal);
 		}
 
-		private static readonly Lazy<BackgroundFileLogSink> _lazy =
-			new(() => new BackgroundFileLogSink(), LazyThreadSafetyMode.ExecutionAndPublication);
-
+		private static Lazy<BackgroundFileLogSink> _lazy = CreateLazy();
 		private static BackgroundFileLogSinkLifecycle _lifecycleHook;
 		private static int _unityLifecycleAttached;
 
@@ -51,6 +49,27 @@ namespace DTech.Logging
 			Application.focusChanged += instance.OnFocusChanged;
 			EnsureLifecycleHook();
 		}
+
+		// Domain reload may be disabled in the editor's Enter Play Mode settings;
+		// in that case static fields survive between play sessions, leaving us with
+		// a stale worker thread, a dangling StreamWriter and a destroyed lifecycle
+		// GameObject. Reset everything before the next session bootstraps.
+		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+		private static void ResetStatics()
+		{
+			Lazy<BackgroundFileLogSink> previous = _lazy;
+			if (previous.IsValueCreated)
+			{
+				try { previous.Value.Shutdown(); } catch { /* ignore */ }
+			}
+
+			_lazy = CreateLazy();
+			_lifecycleHook = null;
+			Interlocked.Exchange(ref _unityLifecycleAttached, 0);
+		}
+
+		private static Lazy<BackgroundFileLogSink> CreateLazy() =>
+			new(() => new BackgroundFileLogSink(), LazyThreadSafetyMode.ExecutionAndPublication);
 
 		private static void EnsureLifecycleHook()
 		{
@@ -203,7 +222,12 @@ namespace DTech.Logging
 
 		private void OnQuitting()
 		{
-			_queue.CompleteAdding();
+			Shutdown();
+		}
+
+		internal void Shutdown()
+		{
+			try { _queue.CompleteAdding(); } catch { /* ignore */ }
 			try { _worker.Join(JoinTimeoutMs); } catch { /* ignore */ }
 		}
 
