@@ -8,6 +8,7 @@ namespace DTech.Logging
 	[CreateAssetMenu(fileName = nameof(LoggerSettings), menuName = "DTech/Logging/Logger Settings")]
 	public sealed class LoggerSettings : ScriptableObject
 	{
+		private static readonly object _loadGate = new();
 		private static volatile LoggerSettings _instance;
 		private static volatile bool _loadAttempted;
 
@@ -17,8 +18,11 @@ namespace DTech.Logging
 		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
 		private static void ResetStatics()
 		{
-			_instance = null;
-			_loadAttempted = false;
+			lock (_loadGate)
+			{
+				_instance = null;
+				_loadAttempted = false;
+			}
 		}
 
 		public static LoggerSettings Instance
@@ -42,9 +46,23 @@ namespace DTech.Logging
 					return null;
 				}
 
-				inst = Resources.Load<LoggerSettings>(nameof(LoggerSettings));
-				_instance = inst;
-				_loadAttempted = true;
+				lock (_loadGate)
+				{
+					inst = _instance;
+					if (inst != null)
+					{
+						return inst;
+					}
+
+					if (_loadAttempted)
+					{
+						return null;
+					}
+
+					inst = Resources.Load<LoggerSettings>(nameof(LoggerSettings));
+					_instance = inst;
+					_loadAttempted = true;
+				}
 
 				if (inst == null)
 				{
