@@ -1,10 +1,14 @@
 using System;
+using System.Text;
 using System.Threading;
 
 namespace DTech.Logging
 {
 	public sealed class Logger : ILogger
 	{
+		private const string ScopesSeparator = " > ";
+		private const string ScopePrefix = "Scope > ";
+
 		private readonly ILogger[] _loggers;
 		private readonly AsyncLocal<LogScope> _currentScope;
 
@@ -49,10 +53,7 @@ namespace DTech.Logging
 			}
 #endif
 
-			if (current != null && current.IsDisposed)
-			{
-				_currentScope.Value = SkipDisposed(current.Parent);
-			}
+			_currentScope.Value = SkipDisposed(current);
 		}
 
 		private static LogScope SkipDisposed(LogScope start)
@@ -64,6 +65,56 @@ namespace DTech.Logging
 			}
 
 			return cursor;
+		}
+
+		private static string BuildEffectiveScopes(LogScope leaf)
+		{
+			LogScope live = SkipDisposed(leaf);
+			if (live == null)
+			{
+				return string.Empty;
+			}
+
+			if (live == leaf && !HasDisposedAncestor(live))
+			{
+				return live.Scopes;
+			}
+
+			var sb = new StringBuilder(ScopePrefix.Length + live.Name.Length);
+			AppendNames(sb, live);
+			return sb.ToString();
+		}
+
+		private static bool HasDisposedAncestor(LogScope scope)
+		{
+			LogScope cursor = scope.Parent;
+			while (cursor != null)
+			{
+				if (cursor.IsDisposed)
+				{
+					return true;
+				}
+
+				cursor = cursor.Parent;
+			}
+
+			return false;
+		}
+
+		private static void AppendNames(StringBuilder sb, LogScope scope)
+		{
+			LogScope parent = SkipDisposed(scope.Parent);
+			if (parent == null)
+			{
+				sb.Append(ScopePrefix);
+			}
+			else
+			{
+				AppendNames(sb, parent);
+				sb.Append(ScopesSeparator);
+			}
+
+			sb.Append(scope.Name);
 		}
 
 		public bool IsEnabled(LogLevel logLevel)
@@ -81,7 +132,7 @@ namespace DTech.Logging
 
 		public void Log<TState>(LogLevel logLevel, Exception exception, string message, object[] args)
 		{
-			string scopes = _currentScope.Value?.Scopes ?? string.Empty;
+			string scopes = BuildEffectiveScopes(_currentScope.Value);
 			for (int i = 0; i < _loggers.Length; i++)
 			{
 				ILogger logger = _loggers[i];
@@ -103,7 +154,7 @@ namespace DTech.Logging
 
 		public void Log<TState>(LogLevel logLevel, Exception exception, string message)
 		{
-			string scopes = _currentScope.Value?.Scopes ?? string.Empty;
+			string scopes = BuildEffectiveScopes(_currentScope.Value);
 			for (int i = 0; i < _loggers.Length; i++)
 			{
 				ILogger logger = _loggers[i];
