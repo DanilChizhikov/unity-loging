@@ -11,7 +11,6 @@ namespace DTech.Logging
 		private const int QueueCapacity = 16384;
 		private const int JoinTimeoutMs = 2000;
 		private const int DropReportInterval = 256;
-		private const int PauseFlushTimeoutMs = 200;
 
 		private readonly struct LogCommand
 		{
@@ -85,19 +84,16 @@ namespace DTech.Logging
 			}
 		}
 
-		public void FlushSynchronously(int timeoutMs)
+		public void RequestFlush()
 		{
 			if (_queue.IsAddingCompleted)
 			{
 				return;
 			}
 
-			_queue.TryAdd(LogCommand.Flush());
-
-			int deadline = Environment.TickCount + Math.Max(0, timeoutMs);
-			while (Environment.TickCount < deadline && _queue.Count > 0)
+			if (!_queue.TryAdd(LogCommand.Flush()))
 			{
-				Thread.Sleep(1);
+				Interlocked.Increment(ref _droppedCount);
 			}
 		}
 
@@ -177,12 +173,12 @@ namespace DTech.Logging
 
 		private void OnFocusChanged(bool hasFocus)
 		{
-			if (hasFocus || _queue.IsAddingCompleted)
+			if (hasFocus)
 			{
 				return;
 			}
 
-			_queue.TryAdd(LogCommand.Flush());
+			RequestFlush();
 		}
 
 		private sealed class BackgroundFileLogSinkLifecycle : MonoBehaviour
@@ -194,7 +190,7 @@ namespace DTech.Logging
 					return;
 				}
 
-				Instance.FlushSynchronously(PauseFlushTimeoutMs);
+				Instance.RequestFlush();
 			}
 		}
 	}
