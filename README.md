@@ -38,9 +38,9 @@ log messages with different levels, and structure log messages with named parame
     ```
 3. Unity will automatically import the package.
 
-If you want to set a target version, Logging uses the `v*.*.*` release tag so you can specify a version like #v1.0.0.
+If you want to set a target version, Logging uses the `v*.*.*` release tag so you can specify a version like #v1.1.0.
 
-For example `https://github.com/DanilChizhikov/unity-loging.git#v1.0.0`.
+For example `https://github.com/DanilChizhikov/unity-loging.git#v1.1.0`.
 
 ## Features
 - Multiple log levels (Trace, Debug, Information, Warning, Error, Critical)
