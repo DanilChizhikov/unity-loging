@@ -35,10 +35,24 @@ namespace DTech.Logging
 			new(() => new BackgroundFileLogSink(), LazyThreadSafetyMode.ExecutionAndPublication);
 
 		private static BackgroundFileLogSinkLifecycle _lifecycleHook;
+		private static int _unityLifecycleAttached;
 
 		public static BackgroundFileLogSink Instance => _lazy.Value;
 
-		public static void EnsureLifecycleHook()
+		public static void AttachUnityLifecycle()
+		{
+			if (Interlocked.Exchange(ref _unityLifecycleAttached, 1) == 1)
+			{
+				return;
+			}
+
+			BackgroundFileLogSink instance = _lazy.Value;
+			Application.quitting += instance.OnQuitting;
+			Application.focusChanged += instance.OnFocusChanged;
+			EnsureLifecycleHook();
+		}
+
+		private static void EnsureLifecycleHook()
 		{
 			if (_lifecycleHook != null)
 			{
@@ -70,9 +84,6 @@ namespace DTech.Logging
 				Name = "DTech.Logging.FileSink",
 			};
 			_worker.Start();
-
-			Application.quitting += OnQuitting;
-			Application.focusChanged += OnFocusChanged;
 		}
 
 		public void Enqueue(string line)

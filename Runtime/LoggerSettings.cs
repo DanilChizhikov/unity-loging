@@ -26,6 +26,12 @@ namespace DTech.Logging
 					return null;
 				}
 
+				if (LoggerUtility.IsMainThreadKnown && !LoggerUtility.IsOnMainThread)
+				{
+					Debug.LogError($"[{nameof(LoggerSettings)}] First access happened off main thread before Prewarm completed. Resources.Load is main-thread-only; logging is disabled until the next main-thread access.");
+					return null;
+				}
+
 				inst = Resources.Load<LoggerSettings>(nameof(LoggerSettings));
 				_instance = inst;
 				_loadAttempted = true;

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 #endif
 using System.Reflection;
+using System.Threading;
 using DTech.Logging.Attributes;
 using UnityEngine;
 
@@ -20,9 +21,18 @@ namespace DTech.Logging
 		private static readonly Lazy<Func<string, ILogger>[]> _cachedLoggerFactories =
 			new(BuildLoggerFactories, true);
 
+		private static int _mainThreadId;
+		private static volatile bool _prewarmCompleted;
+
+		internal static bool IsMainThreadKnown => _mainThreadId != 0;
+		internal static bool IsOnMainThread => _mainThreadId != 0 && Thread.CurrentThread.ManagedThreadId == _mainThreadId;
+		internal static bool PrewarmCompleted => _prewarmCompleted;
+
 		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
 		private static void Prewarm()
 		{
+			_mainThreadId = Thread.CurrentThread.ManagedThreadId;
+
 			// Force the assembly scan + factory build to happen during scene load
 			// (typically behind a splash) instead of on the first log call mid-gameplay.
 			_ = _cachedLoggerFactories.Value;
@@ -35,7 +45,9 @@ namespace DTech.Logging
 			_ = LoggerSettings.Instance;
 			_ = LoggerFileProvider.CurrentLogFilePath;
 			_ = BackgroundFileLogSink.Instance;
-			BackgroundFileLogSink.EnsureLifecycleHook();
+			BackgroundFileLogSink.AttachUnityLifecycle();
+
+			_prewarmCompleted = true;
 		}
 
 		public static ILogger[] GetDefaultLoggers(string tag)
