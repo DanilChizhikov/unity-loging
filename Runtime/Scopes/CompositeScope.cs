@@ -3,12 +3,13 @@ using System.Buffers;
 
 namespace DTech.Logging
 {
-	public sealed class CompositeScope : IDisposable
+	internal sealed class CompositeScope : IDisposable
 	{
 		private readonly IDisposable[] _disposables;
 		private readonly int _count;
 		private readonly bool _isPooled;
-		
+		private bool _isDisposed;
+
 		public CompositeScope(params IDisposable[] disposables)
 			: this(disposables, disposables.Length, false)
 		{
@@ -20,14 +21,15 @@ namespace DTech.Logging
 			_count = count;
 			_isPooled = isPooled;
 		}
-		
+
 		public void Dispose()
 		{
-			if (_disposables == null)
+			if (_isDisposed || _disposables == null)
 			{
 				return;
 			}
 
+			_isDisposed = true;
 			for (int i = 0; i < _count; i++)
 			{
 				IDisposable disposable = _disposables[i];
@@ -35,7 +37,7 @@ namespace DTech.Logging
 				{
 					continue;
 				}
-				
+
 				disposable.Dispose();
 			}
 

@@ -7,6 +7,26 @@ namespace DTech.Logging
 {
 	internal sealed class LogLineBuilder
 	{
+		[ThreadStatic] private static StringBuilder t_builder;
+
+		private const int MaxRetainedBuilderCapacity = 8192;
+
+		private static StringBuilder RentBuilder()
+		{
+			StringBuilder sb = t_builder;
+			if (sb == null || sb.Capacity > MaxRetainedBuilderCapacity)
+			{
+				sb = new StringBuilder(128);
+				t_builder = sb;
+			}
+			else
+			{
+				sb.Clear();
+			}
+
+			return sb;
+		}
+
 		private enum TemplateSegmentKind : byte
 		{
 			Literal = 0,
@@ -38,63 +58,33 @@ namespace DTech.Logging
 		private const string LogScopePlacement = "LOG_SCOPE";
 		private const string LogTagPlacement = "LOG_TAG";
 		private const string LogStatePlacement = "LOG_STATE";
-		
-		private readonly string _template;
+
 		private readonly List<ILogPlacementReplacer> _replacers;
 		private readonly TemplateSegment[] _segments;
 
-		private LogLevel _logLevel;
-		private string _scopes;
-		private string _tag;
-		private string _stateName;
-		private string _body;
-		
 		public LogLineBuilder(string template, IEnumerable<ILogPlacementReplacer> replacers)
 		{
-			_template = template;
 			_replacers = new List<ILogPlacementReplacer>(replacers);
 			_segments = ParseTemplate(template);
 		}
-		
-		public LogLineBuilder SetLogLevel(LogLevel logLevel)
-		{
-			_logLevel = logLevel;
-			return this;
-		}
-		
-		public LogLineBuilder SetScopes(string scopes)
-		{
-			_scopes = scopes;
-			return this;
-		}
 
-		public LogLineBuilder SetTag(string tag)
+		public string Render(LogLevel logLevel, string scopes, string tag, string stateName, string body)
 		{
-			_tag = tag;
-			return this;
-		}
-		
-		public LogLineBuilder SetStateName(string stateName)
-		{
-			_stateName = stateName;
-			return this;
-		}
-		
-		public LogLineBuilder SetBody(string body)
-		{
-			_body = body;
-			return this;
-		}
-
-		public override string ToString()
-		{
-			if (string.IsNullOrEmpty(_template))
+			if (_segments.Length == 0)
 			{
-				return _body;
+				return body;
 			}
 
-			var logInfo = new LogInfo(_logLevel, _scopes, _tag, _stateName);
-			string result = ReplaceBuiltInPlacements(logInfo);
+			var logInfo = new LogInfo(logLevel, scopes, tag, stateName);
+			StringBuilder sb = RentBuilder();
+			AppendBuiltInSegments(sb, logInfo);
+
+			if (_replacers.Count == 0)
+			{
+				return AppendBody(sb, body);
+			}
+
+			string result = sb.ToString();
 			for (int i = 0; i < _replacers.Count; i++)
 			{
 				ILogPlacementReplacer replacer = _replacers[i];
@@ -106,21 +96,27 @@ namespace DTech.Logging
 				result = result.Remove(result.Length - 1);
 			}
 
-			return result + " " + _body;
+			return result + " " + body;
 		}
 
-		public void Reset()
+		private static string AppendBody(StringBuilder sb, string body)
 		{
-			_logLevel = LogLevel.Information;
-			_scopes = string.Empty;
-			_tag = string.Empty;
-			_stateName = string.Empty;
-			_body = string.Empty;
+			if (sb.Length > 0 && sb[sb.Length - 1] == ' ')
+			{
+				sb.Length--;
+			}
+
+			if (sb.Length > 0)
+			{
+				sb.Append(' ');
+			}
+
+			sb.Append(body);
+			return sb.ToString();
 		}
 
-		private string ReplaceBuiltInPlacements(LogInfo logInfo)
+		private void AppendBuiltInSegments(StringBuilder builder, LogInfo logInfo)
 		{
-			var builder = new StringBuilder(_template.Length + 16);
 			for (int i = 0; i < _segments.Length; i++)
 			{
 				TemplateSegment segment = _segments[i];
@@ -158,8 +154,6 @@ namespace DTech.Logging
 					} break;
 				}
 			}
-
-			return builder.ToString();
 		}
 
 		private static TemplateSegment[] ParseTemplate(string template)

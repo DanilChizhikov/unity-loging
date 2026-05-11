@@ -25,27 +25,49 @@ namespace DTech.Logging.Tests
 		}
 		
 		[Test]
-		public void LogError_WithException_WritesErrorLogWithExceptionFirst()
+		public void LogError_WithException_AppendsExceptionAfterFormattedMessage()
 		{
 			var logger = new Logger("TestTag");
 			var ex = new InvalidOperationException("Boom");
-			var pattern = @"^\[ERROR\]\[TestTag\]\[LoggerTests\] Error occurred\. Exception: .*?, Value: 42$";
+			var pattern = @"^\[ERROR\]\[TestTag\]\[LoggerTests\] Error occurred\. Value: 42\nSystem\.InvalidOperationException: Boom";
 			var regex = new System.Text.RegularExpressions.Regex(pattern);
-			
+
 			LogAssert.Expect(LogType.Error, regex);
-			
+
 			logger.LogError<LoggerTests>(ex,
-				"Error occurred. Exception: {0}, Value: {1}",
+				"Error occurred. Value: {0}",
 				42);
-			
+		}
+
+		[Test]
+		public void LogError_WithExceptionAndPlainMessage_DoesNotThrowAndAppendsException()
+		{
+			var logger = new Logger("TestTag");
+			var ex = new InvalidOperationException("Boom");
+			var pattern = @"^\[ERROR\]\[TestTag\] Failed to load data System\.InvalidOperationException: Boom";
+			var regex = new System.Text.RegularExpressions.Regex(pattern);
+
+			LogAssert.Expect(LogType.Error, regex);
+
+			logger.LogError("Failed to load data {0}", ex.ToString());
+		}
+
+		[Test]
+		public void LogError_WithoutException_FormatsMessageOnly()
+		{
+			var logger = new Logger("TestTag");
+			const string Expected = "[ERROR][TestTag] Failed: code=500";
+
+			LogAssert.Expect(LogType.Error, Expected);
+
+			logger.LogError("Failed: code={0}", 500);
 		}
 		
 		[Test]
 		public void BeginScope_AddsScopeInfoToLog()
 		{
 			var logger = new Logger("TestTag");
-			const string Expected =
-				"[INFO][Scope > TestTag > ScopeName][TestTag] Message in scope";
+			const string Expected = "[INFO][Scope > ScopeName][TestTag] Message in scope";
 			
 			using (logger.BeginScope("ScopeName"))
 			{
@@ -58,8 +80,7 @@ namespace DTech.Logging.Tests
 		public void NestedScopes_AreOrderedFromOuterToInner()
 		{
 			var logger = new Logger("TestTag");
-			const string Expected =
-				"[INFO][Scope > TestTag > Outer > TestTag > Inner][TestTag] Nested";
+			const string Expected = "[INFO][Scope > Outer > Inner][TestTag] Nested";
 			
 			using (logger.BeginScope("Outer"))
 			{

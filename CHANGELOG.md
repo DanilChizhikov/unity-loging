@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.1.0] - 2026-05-11
+
+### Added
+- Dropped-entry reporting for the background file log sink.
+
+### Changed
+- Improved file logging reliability with asynchronous writes, serialized writer access, pause flushing, and main-thread Unity API prewarm.
+- Improved logging hot-path performance by reducing boxing, optimizing `IsEnabled`, and making scope and render paths cheaper.
+- Strengthened performance and allocation tests with stricter GC budget assertions.
+
+### Fixed
+- Fixed out-of-order and disposed scope handling when rendering scope chains.
+- Fixed format cache comparisons to use string content instead of string references.
+- Fixed exception formatting, domain reload static resets, and null-safe `LoggerSettings` access in built-in sinks.
+- Fixed background file sink pause flush behavior and dropped-entry accounting.
+
 ## [1.0.0] - 2025-03-30
 
 ### Added

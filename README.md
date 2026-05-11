@@ -38,21 +38,18 @@ log messages with different levels, and structure log messages with named parame
     ```
 3. Unity will automatically import the package.
 
-If you want to set a target version, Logging uses the `v*.*.*` release tag so you can specify a version like #v1.0.0.
+If you want to set a target version, Logging uses the `v*.*.*` release tag so you can specify a version like #v1.1.0.
 
-For example `https://github.com/DanilChizhikov/unity-loging.git#v1.0.0`.
+For example `https://github.com/DanilChizhikov/unity-loging.git#v1.1.0`.
 
 ## Features
 - Multiple log levels (Trace, Debug, Information, Warning, Error, Critical)
-- Structured logging with named parameters
+- Positional `string.Format`-style placeholders in messages
 - Scoped logging for grouping related operations
 - Exception logging with stack traces
-- Thread-safe implementation
 - Extensible logging pipeline
-- Compatible with Microsoft.Extensions.Logging patterns
 - Log format template
 - Memory-efficient template parsing with caching
-- Zero-allocation scopes via ArrayPool
 
 ## Settings
 For control log on release builds, you can use the `LoggerSettings`.
@@ -173,6 +170,13 @@ You can set the `Console Format String` property to `[LOG_LEVEL][LOG_SCOPE][LOG_
 
 To add your own replacers, you can create a new class that inherits from `ScriptableLogPlacementReplacer` and override the `Replace` method.
 Then, you need to add an instance of your class to the `PlacementReplacers` property of the `LoggerSettings` object.
+
+### Custom Logger Providers
+
+To plug your own sink (analytics, remote log shipper, etc.), implement `ILogger`, declare a `.ctor(string tag)`, and mark the type with `[DefaultLoggerProvider]`. It will be auto-discovered and instantiated for every `Logger` alongside `UnityLogger` and `FileLogger`.
+
+> [!NOTE]
+> Scope context (the chain produced by `BeginScope`) is currently delivered **only** to the built-in internal sinks. Custom `ILogger` implementations registered via `[DefaultLoggerProvider]` receive the original message and arguments but not the rendered scope string. If your sink needs scope information, render it into the message body explicitly.
 
 ## License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using UnityEngine;
 
 namespace DTech.Logging
@@ -12,7 +11,12 @@ namespace DTech.Logging
 
 		public override bool IsEnabled(LogLevel logLevel)
 		{
-			return IsLogEnabled() && LoggerSettings.Instance.IsEnabled(logLevel);
+#if UNITY_EDITOR
+			return false;
+#else
+			LoggerSettings settings = LoggerSettings.Instance;
+			return settings != null && settings.IsFileLoggingEnabled && settings.IsEnabled(logLevel);
+#endif
 		}
 
 		protected override void SendLog<TState>(LogLevel logLevel, Exception exception, string message, object[] args, string scopes)
@@ -21,7 +25,7 @@ namespace DTech.Logging
 			{
 				return;
 			}
-			
+
 			string logBody = FormatMessage(exception, message, args);
 			SendLog<TState>(logLevel, logBody, scopes);
 		}
@@ -36,24 +40,25 @@ namespace DTech.Logging
 			string logBody = FormatMessage(exception, message);
 			SendLog<TState>(logLevel, logBody, scopes);
 		}
-		
-		private bool IsLogEnabled() => !Application.isEditor && LoggerSettings.Instance.IsFileLoggingEnabled;
+
+		private bool IsLogEnabled()
+		{
+#if UNITY_EDITOR
+			return false;
+#else
+			LoggerSettings settings = LoggerSettings.Instance;
+			return settings != null && settings.IsFileLoggingEnabled;
+#endif
+		}
 
 		private void SendLog<TState>(LogLevel logLevel, string message, string scopes)
 		{
 			LoggerSettings settings = LoggerSettings.Instance;
 			LogLineBuilder lineBuilder = GetOrCreateLineBuilder(settings.FileFormatString, settings.PlacementReplacers);
-			string stateName = typeof(TState).Name;
-			lineBuilder.Reset();
-			lineBuilder.SetLogLevel(logLevel)
-				.SetScopes(scopes)
-				.SetTag(Tag)
-				.SetStateName(stateName)
-				.SetBody(message);
+			string stateName = StateName<TState>.Value;
+			string log = lineBuilder.Render(logLevel, scopes, Tag, stateName, message);
 
-			using var stream = new StreamWriter(LoggerFileProvider.CurrentLogFilePath, true);
-			stream.WriteLine(lineBuilder.ToString());
-			lineBuilder.Reset();
+			BackgroundFileLogSink.Instance.Enqueue(log);
 		}
 	}
 }

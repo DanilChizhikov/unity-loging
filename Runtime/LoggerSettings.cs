@@ -8,26 +8,70 @@ namespace DTech.Logging
 	[CreateAssetMenu(fileName = nameof(LoggerSettings), menuName = "DTech/Logging/Logger Settings")]
 	public sealed class LoggerSettings : ScriptableObject
 	{
-		private static readonly object _lockObject = new();
-		
+		private static readonly object _loadGate = new();
+		private static volatile LoggerSettings _instance;
+		private static volatile bool _loadAttempted;
+
+		// See BackgroundFileLogSink.ResetStatics: with domain reload disabled,
+		// statics survive between play sessions and a previously cached settings
+		// reference may now be a fake-null UnityEngine.Object. Force a re-load.
+		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+		private static void ResetStatics()
+		{
+			lock (_loadGate)
+			{
+				_instance = null;
+				_loadAttempted = false;
+			}
+		}
+
 		public static LoggerSettings Instance
 		{
 			get
 			{
-				lock (_lockObject)
+				LoggerSettings inst = _instance;
+				if (inst != null)
 				{
-					if (!_hasInstance)
-					{
-						_instance = Resources.Load<LoggerSettings>(nameof(LoggerSettings));
-						_hasInstance = true;
-					}
+					return inst;
 				}
-				
-				return _instance;
+
+				if (_loadAttempted)
+				{
+					return null;
+				}
+
+				if (LoggerUtility.IsMainThreadKnown && !LoggerUtility.IsOnMainThread)
+				{
+					Debug.LogError($"[{nameof(LoggerSettings)}] First access happened off main thread before Prewarm completed. Resources.Load is main-thread-only; logging is disabled until the next main-thread access.");
+					return null;
+				}
+
+				lock (_loadGate)
+				{
+					inst = _instance;
+					if (inst != null)
+					{
+						return inst;
+					}
+
+					if (_loadAttempted)
+					{
+						return null;
+					}
+
+					inst = Resources.Load<LoggerSettings>(nameof(LoggerSettings));
+					_instance = inst;
+					_loadAttempted = true;
+				}
+
+				if (inst == null)
+				{
+					Debug.LogError($"[{nameof(LoggerSettings)}] Asset '{nameof(LoggerSettings)}' was not found in any Resources folder. Logging will be disabled.");
+				}
+
+				return inst;
 			}
 		}
-
-		private static bool _hasInstance = false;
 		
 		[SerializeField] private bool _isTraceEnabled = false;
 		[SerializeField] private bool _isDebugEnabled = false;
@@ -41,8 +85,6 @@ namespace DTech.Logging
 		[SerializeField] private string _consoleFormatString = "[LOG_LEVEL][LOG_SCOPE][LOG_TAG][LOG_STATE]";
 		[SerializeField] private string _fileFormatString = "[DATE_TIME:HH:mm:ss.fff][LOG_LEVEL][LOG_SCOPE][LOG_TAG][LOG_STATE]";
 		[SerializeField] private ScriptableLogPlacementReplacer[] _placementReplacers = Array.Empty<ScriptableLogPlacementReplacer>();
-		
-		private static LoggerSettings _instance;
 
 		public bool IsFileLoggingEnabled => LogConditions.IsFileLoggingEnabled && _isFileLoggingEnabled;
 		public string ConsoleFormatString => _consoleFormatString;

@@ -11,11 +11,8 @@ namespace DTech.Logging
 
 		public override bool IsEnabled(LogLevel logLevel)
 		{
-			#if DEVELOPMENT_BUILD || UNITY_EDITOR
-			return logLevel != LogLevel.None;
-			#endif
-
-			return LoggerSettings.Instance.IsEnabled(logLevel);
+			LoggerSettings settings = LoggerSettings.Instance;
+			return settings != null && settings.IsEnabled(logLevel);
 		}
 
 		protected override void SendLog<TState>(LogLevel logLevel, Exception exception, string message, object[] args, string scopes)
@@ -34,16 +31,8 @@ namespace DTech.Logging
 		{
 			LoggerSettings settings = LoggerSettings.Instance;
 			LogLineBuilder lineBuilder = GetOrCreateLineBuilder(settings.ConsoleFormatString, settings.PlacementReplacers);
-			string stateName = typeof(TState).Name;
-			lineBuilder.Reset();
-			lineBuilder.SetLogLevel(logLevel)
-				.SetScopes(scopes)
-				.SetTag(Tag)
-				.SetStateName(stateName)
-				.SetBody(message);
-
-			string log = lineBuilder.ToString();
-			lineBuilder.Reset();
+			string stateName = StateName<TState>.Value;
+			string log = lineBuilder.Render(logLevel, scopes, Tag, stateName, message);
 			switch (logLevel)
 			{
 				case LogLevel.None:

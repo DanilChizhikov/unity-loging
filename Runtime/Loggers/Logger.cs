@@ -1,70 +1,151 @@
 using System;
-using System.Buffers;
+using System.Text;
+using System.Threading;
 
 namespace DTech.Logging
 {
 	public sealed class Logger : ILogger
 	{
+		private const string ScopesSeparator = " > ";
+		private const string ScopePrefix = "Scope > ";
+
 		private readonly ILogger[] _loggers;
+		private readonly AsyncLocal<LogScope> _currentScope;
 
 		public Logger(string tag)
 		{
 			_loggers = LoggerUtility.GetDefaultLoggers(tag);
+			_currentScope = new AsyncLocal<LogScope>();
 		}
 
 		public Logger(string tag, params ILogger[] loggers)
 		{
 			_loggers = loggers ?? LoggerUtility.GetDefaultLoggers(tag);
+			_currentScope = new AsyncLocal<LogScope>();
 		}
 
 		public IDisposable BeginScope<TState>()
 		{
-			return BeginScope(nameof(TState));
+			return BeginScope(TypeNameCache<TState>.Name);
 		}
 
 		public IDisposable BeginScope(string state)
 		{
-			int loggerCount = _loggers.Length;
-			if (loggerCount == 0)
+			var newScope = new LogScope(state, _currentScope.Value, this);
+			_currentScope.Value = newScope;
+			return newScope;
+		}
+
+		internal void OnScopeDisposed(LogScope scope)
+		{
+			LogScope current = _currentScope.Value;
+			if (current == scope)
 			{
-				return NullScope.Instance;
+				_currentScope.Value = SkipDisposed(scope.Parent);
+				return;
 			}
 
-			if (loggerCount == 1)
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+			if (current != null)
 			{
-				return _loggers[0].BeginScope(state);
+				UnityEngine.Debug.LogWarning(
+					$"[{nameof(Logger)}] LogScope disposed out of LIFO order (disposed='{scope.Name}', current='{current.Name}'). Use 'using' blocks to ensure correct nesting.");
+			}
+#endif
+
+			_currentScope.Value = SkipDisposed(current);
+		}
+
+		private static LogScope SkipDisposed(LogScope start)
+		{
+			LogScope cursor = start;
+			while (cursor != null && cursor.IsDisposed)
+			{
+				cursor = cursor.Parent;
 			}
 
-			IDisposable[] scopes = ArrayPool<IDisposable>.Shared.Rent(loggerCount);
-			for (int i = 0; i < loggerCount; i++)
+			return cursor;
+		}
+
+		private static string BuildEffectiveScopes(LogScope leaf)
+		{
+			LogScope live = SkipDisposed(leaf);
+			if (live == null)
 			{
-				ILogger logger = _loggers[i];
-				scopes[i] = logger.BeginScope(state);
+				return string.Empty;
 			}
 
-			return new CompositeScope(scopes, loggerCount, true);
+			if (live == leaf && !HasDisposedAncestor(live))
+			{
+				return live.Scopes;
+			}
+
+			var sb = new StringBuilder(ScopePrefix.Length + live.Name.Length);
+			AppendNames(sb, live);
+			return sb.ToString();
+		}
+
+		private static bool HasDisposedAncestor(LogScope scope)
+		{
+			LogScope cursor = scope.Parent;
+			while (cursor != null)
+			{
+				if (cursor.IsDisposed)
+				{
+					return true;
+				}
+
+				cursor = cursor.Parent;
+			}
+
+			return false;
+		}
+
+		private static void AppendNames(StringBuilder sb, LogScope scope)
+		{
+			LogScope parent = SkipDisposed(scope.Parent);
+			if (parent == null)
+			{
+				sb.Append(ScopePrefix);
+			}
+			else
+			{
+				AppendNames(sb, parent);
+				sb.Append(ScopesSeparator);
+			}
+
+			sb.Append(scope.Name);
 		}
 
 		public bool IsEnabled(LogLevel logLevel)
 		{
 			for (int i = 0; i < _loggers.Length; i++)
 			{
-				ILogger logger = _loggers[i];
-				if (logger.IsEnabled(logLevel))
+				if (_loggers[i].IsEnabled(logLevel))
 				{
 					return true;
 				}
 			}
-			
+
 			return false;
 		}
 
 		public void Log<TState>(LogLevel logLevel, Exception exception, string message, object[] args)
 		{
+			string scopes = BuildEffectiveScopes(_currentScope.Value);
 			for (int i = 0; i < _loggers.Length; i++)
 			{
 				ILogger logger = _loggers[i];
-				if (logger.IsEnabled(logLevel))
+				if (!logger.IsEnabled(logLevel))
+				{
+					continue;
+				}
+
+				if (logger is InternalLoggerBase internalLogger)
+				{
+					internalLogger.Log<TState>(logLevel, exception, message, args, scopes);
+				}
+				else
 				{
 					logger.Log<TState>(logLevel, exception, message, args);
 				}
@@ -73,10 +154,20 @@ namespace DTech.Logging
 
 		public void Log<TState>(LogLevel logLevel, Exception exception, string message)
 		{
+			string scopes = BuildEffectiveScopes(_currentScope.Value);
 			for (int i = 0; i < _loggers.Length; i++)
 			{
 				ILogger logger = _loggers[i];
-				if (logger.IsEnabled(logLevel))
+				if (!logger.IsEnabled(logLevel))
+				{
+					continue;
+				}
+
+				if (logger is InternalLoggerBase internalLogger)
+				{
+					internalLogger.Log<TState>(logLevel, exception, message, scopes);
+				}
+				else
 				{
 					logger.Log<TState>(logLevel, exception, message);
 				}
@@ -87,7 +178,7 @@ namespace DTech.Logging
 	public sealed class Logger<TCategoryName> : ILogger<TCategoryName>
 	{
 		private readonly ILogger _logger;
-		
+
 		public Logger()
 		{
 			_logger = new Logger(typeof(TCategoryName).Name);
@@ -97,7 +188,7 @@ namespace DTech.Logging
 		{
 			_logger = new Logger(typeof(TCategoryName).Name, loggers);
 		}
-		
+
 		public IDisposable BeginScope<TState>()
 		{
 			return _logger.BeginScope<TState>();
