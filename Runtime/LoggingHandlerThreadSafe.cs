@@ -60,9 +60,10 @@ namespace DTech.Logging
 		{
 			Interlocked.Exchange(ref _drainPosted, 0);
 
+			Application.LogCallback handler = OnLogMessageReceivedThreaded;
 			while (_queue.TryDequeue(out LogRecord record))
 			{
-				OnLogMessageReceivedThreaded?.Invoke(record.Condition, record.StackTrace, record.LogType);
+				handler?.Invoke(record.Condition, record.StackTrace, record.LogType);
 			}
 		}
 	}

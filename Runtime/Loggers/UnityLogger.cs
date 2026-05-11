@@ -11,7 +11,8 @@ namespace DTech.Logging
 
 		public override bool IsEnabled(LogLevel logLevel)
 		{
-			return LoggerSettings.Instance.IsEnabled(logLevel);
+			LoggerSettings settings = LoggerSettings.Instance;
+			return settings != null && settings.IsEnabled(logLevel);
 		}
 
 		protected override void SendLog<TState>(LogLevel logLevel, Exception exception, string message, object[] args, string scopes)

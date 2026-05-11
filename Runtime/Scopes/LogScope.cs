@@ -9,7 +9,6 @@ namespace DTech.Logging
 		private const string ScopePrefix = "Scope > ";
 
 		private readonly Logger _owner;
-		private bool _isDisposed;
 
 		public string Name { get; }
 
@@ -17,6 +16,8 @@ namespace DTech.Logging
 
 		[CanBeNull]
 		public LogScope Parent { get; }
+
+		public bool IsDisposed { get; private set; }
 
 		public LogScope(string blockName, [CanBeNull] LogScope parent, Logger owner)
 		{
@@ -31,17 +32,17 @@ namespace DTech.Logging
 				: parent.Scopes + ScopesSeparator + Name;
 			Parent = parent;
 			_owner = owner;
-			_isDisposed = false;
+			IsDisposed = false;
 		}
 
 		public void Dispose()
 		{
-			if (_isDisposed)
+			if (IsDisposed)
 			{
 				return;
 			}
 
-			_isDisposed = true;
+			IsDisposed = true;
 			_owner?.OnScopeDisposed(this);
 		}
 	}

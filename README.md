@@ -171,5 +171,12 @@ You can set the `Console Format String` property to `[LOG_LEVEL][LOG_SCOPE][LOG_
 To add your own replacers, you can create a new class that inherits from `ScriptableLogPlacementReplacer` and override the `Replace` method.
 Then, you need to add an instance of your class to the `PlacementReplacers` property of the `LoggerSettings` object.
 
+### Custom Logger Providers
+
+To plug your own sink (analytics, remote log shipper, etc.), implement `ILogger`, declare a `.ctor(string tag)`, and mark the type with `[DefaultLoggerProvider]`. It will be auto-discovered and instantiated for every `Logger` alongside `UnityLogger` and `FileLogger`.
+
+> [!NOTE]
+> Scope context (the chain produced by `BeginScope`) is currently delivered **only** to the built-in internal sinks. Custom `ILogger` implementations registered via `[DefaultLoggerProvider]` receive the original message and arguments but not the rendered scope string. If your sink needs scope information, render it into the message body explicitly.
+
 ## License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

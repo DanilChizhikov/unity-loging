@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 #endif
 using System.Reflection;
+using System.Threading;
 using DTech.Logging.Attributes;
 using UnityEngine;
 
@@ -20,12 +21,40 @@ namespace DTech.Logging
 		private static readonly Lazy<Func<string, ILogger>[]> _cachedLoggerFactories =
 			new(BuildLoggerFactories, true);
 
+		private static int _mainThreadId;
+		private static volatile bool _prewarmCompleted;
+
+		internal static bool IsMainThreadKnown => _mainThreadId != 0;
+		internal static bool IsOnMainThread => _mainThreadId != 0 && Thread.CurrentThread.ManagedThreadId == _mainThreadId;
+		internal static bool PrewarmCompleted => _prewarmCompleted;
+
+		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+		private static void ResetStatics()
+		{
+			_mainThreadId = 0;
+			_prewarmCompleted = false;
+		}
+
 		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
 		private static void Prewarm()
 		{
+			_mainThreadId = Thread.CurrentThread.ManagedThreadId;
+
 			// Force the assembly scan + factory build to happen during scene load
 			// (typically behind a splash) instead of on the first log call mid-gameplay.
 			_ = _cachedLoggerFactories.Value;
+
+			// Touch Unity APIs that are main-thread-only here, while we are guaranteed
+			// to run on the main thread. Without this, the first log call from a
+			// background thread would force LoggerFileProvider's static ctor to read
+			// Application.persistentDataPath off-main-thread (UnityException on device)
+			// and Resources.Load to run off-main-thread.
+			_ = LoggerSettings.Instance;
+			_ = LoggerFileProvider.CurrentLogFilePath;
+			_ = BackgroundFileLogSink.Instance;
+			BackgroundFileLogSink.AttachUnityLifecycle();
+
+			_prewarmCompleted = true;
 		}
 
 		public static ILogger[] GetDefaultLoggers(string tag)

@@ -1,5 +1,4 @@
 using System;
-using System.Buffers;
 using System.Collections.Generic;
 using DTech.Logging.Placements;
 
@@ -64,7 +63,7 @@ namespace DTech.Logging
 		protected LogLineBuilder GetOrCreateLineBuilder(string format, IReadOnlyList<ILogPlacementReplacer> replacers)
 		{
 			if (_lineBuilder != null &&
-			    ReferenceEquals(_lineBuilderFormat, format) &&
+			    string.Equals(_lineBuilderFormat, format, StringComparison.Ordinal) &&
 			    ReferenceEquals(_lineBuilderReplacers, replacers))
 			{
 				return _lineBuilder;

@@ -9,10 +9,12 @@ namespace DTech.Logging
 	{
 		[ThreadStatic] private static StringBuilder t_builder;
 
+		private const int MaxRetainedBuilderCapacity = 8192;
+
 		private static StringBuilder RentBuilder()
 		{
 			StringBuilder sb = t_builder;
-			if (sb == null)
+			if (sb == null || sb.Capacity > MaxRetainedBuilderCapacity)
 			{
 				sb = new StringBuilder(128);
 				t_builder = sb;
@@ -79,18 +81,7 @@ namespace DTech.Logging
 
 			if (_replacers.Count == 0)
 			{
-				if (sb.Length > 0 && sb[sb.Length - 1] == ' ')
-				{
-					sb.Length--;
-				}
-
-				if (sb.Length > 0)
-				{
-					sb.Append(' ');
-				}
-
-				sb.Append(body);
-				return sb.ToString();
+				return AppendBody(sb, body);
 			}
 
 			string result = sb.ToString();
@@ -106,6 +97,22 @@ namespace DTech.Logging
 			}
 
 			return result + " " + body;
+		}
+
+		private static string AppendBody(StringBuilder sb, string body)
+		{
+			if (sb.Length > 0 && sb[sb.Length - 1] == ' ')
+			{
+				sb.Length--;
+			}
+
+			if (sb.Length > 0)
+			{
+				sb.Append(' ');
+			}
+
+			sb.Append(body);
+			return sb.ToString();
 		}
 
 		private void AppendBuiltInSegments(StringBuilder builder, LogInfo logInfo)

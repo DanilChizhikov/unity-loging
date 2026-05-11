@@ -12,20 +12,12 @@ namespace DTech.Logging
 		private const string LogFileExtension = ".log";
 		private const string DateFormat = "yyyy_MM_dd_HH_mm_ss";
 
-		private static readonly bool _isInitialized;
-
 		public static string CurrentLogFilePath { get; private set; }
 
 		static LoggerFileProvider()
 		{
-			if (_isInitialized)
-			{
-				return;
-			}
-
 			string basePath = ResolveBasePath(GetPreferredBasePath());
 			RefreshLogPath(basePath);
-			_isInitialized = true;
 		}
 
 		public static void RefreshLogPath(string basePath = null)
