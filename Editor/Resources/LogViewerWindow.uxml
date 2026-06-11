@@ -1,0 +1,34 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements"
+         editor-extension-mode="True">
+    <ui:VisualElement name="root" class="lvw-root">
+        <uie:Toolbar name="toolbar" class="lvw-toolbar">
+            <uie:ToolbarButton name="btn-clear" text="Clear" class="lvw-tb-btn"/>
+            <uie:ToolbarToggle name="tgl-autoscroll" text="Autoscroll" class="lvw-tb-btn"/>
+            <ui:VisualElement class="lvw-tb-spacer"/>
+            <ui:VisualElement name="level-toggles" class="lvw-level-toggles"/>
+            <ui:VisualElement class="lvw-tb-flex"/>
+            <uie:ToolbarButton name="tag-menu" text="Tags ▾" class="lvw-tb-btn"/>
+            <uie:ToolbarSearchField name="search-field" class="lvw-search-field"/>
+            <uie:ToolbarButton name="btn-colors" text="Colors…" class="lvw-tb-btn"/>
+        </uie:Toolbar>
+
+        <ui:VisualElement name="content" class="lvw-content">
+            <ui:TwoPaneSplitView name="splitter" class="lvw-splitter" orientation="Vertical"
+                                 fixed-pane-index="1" fixed-pane-initial-dimension="150">
+                <ui:VisualElement name="list-host" class="lvw-list-host">
+                    <ui:ListView name="list" class="lvw-list" fixed-item-height="20"
+                                 selection-type="Single"/>
+                    <ui:Label name="empty-hint" class="lvw-empty-hint"
+                              text="No logs captured yet. Enter Play mode and log through DTech.Logging.Logger."/>
+                </ui:VisualElement>
+                <ui:ScrollView name="detail" class="lvw-detail">
+                    <ui:Label name="detail-label" class="lvw-detail-label"/>
+                </ui:ScrollView>
+            </ui:TwoPaneSplitView>
+        </ui:VisualElement>
+
+        <ui:VisualElement name="footer" class="lvw-footer">
+            <ui:Label name="footer-label" class="lvw-footer-label"/>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
