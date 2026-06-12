@@ -9,7 +9,7 @@ namespace DTech.Logging.Editor
 {
 	internal sealed class LogViewerWindow : EditorWindow
 	{
-		private static readonly LogLevel[] DisplayLevels =
+		private static readonly LogLevel[] _displayLevels =
 		{
 			LogLevel.Trace,
 			LogLevel.Debug,
@@ -19,7 +19,7 @@ namespace DTech.Logging.Editor
 			LogLevel.Critical,
 		};
 
-		private static readonly Color DefaultPillColor = new Color(0f, 0f, 0f, 0.25f);
+		private static readonly Color _defaultPillColor = new Color(0f, 0f, 0f, 0.25f);
 
 		private sealed class RowElements
 		{
@@ -39,7 +39,7 @@ namespace DTech.Logging.Editor
 		private ToolbarToggle _autoScrollToggle;
 
 		private readonly Dictionary<LogLevel, ToolbarToggle> _levelToggles = new Dictionary<LogLevel, ToolbarToggle>();
-		private readonly HashSet<LogLevel> _enabledLevels = new HashSet<LogLevel>(DisplayLevels);
+		private readonly HashSet<LogLevel> _enabledLevels = new HashSet<LogLevel>(_displayLevels);
 
 		private readonly List<LogEntry> _snapshot = new List<LogEntry>();
 		private readonly List<LogEntry> _filtered = new List<LogEntry>();
@@ -47,7 +47,10 @@ namespace DTech.Logging.Editor
 		private string _search = string.Empty;
 		private string _tagFilter;
 		private bool _autoScroll = true;
+		private bool _monospaceActive;
 		private int _lastVersion = -1;
+
+		private static Font _monospaceFont;
 
 		[MenuItem("Tools/DTech/Logger/Viewer")]
 		private static void Open()
@@ -77,22 +80,24 @@ namespace DTech.Logging.Editor
 			_settings = LogViewerSettingsProvider.GetOrCreate();
 			EditorLogBuffer.SetCapacity(_settings.MaxBufferSize);
 			_autoScroll = _settings.AutoScroll;
+			_monospaceActive = _settings.UseMonospaceFont;
 
-			var tree = Resources.Load<VisualTreeAsset>("LogViewerWindow");
+			var tree = LoadWindowAsset<VisualTreeAsset>("t:VisualTreeAsset LogViewerWindow");
 			if (tree == null)
 			{
-				rootVisualElement.Add(new Label("LogViewerWindow.uxml not found in any Editor/Resources folder."));
+				rootVisualElement.Add(new Label("LogViewerWindow.uxml not found in the package."));
 				return;
 			}
 
 			tree.CloneTree(rootVisualElement);
 
-			var styles = Resources.Load<StyleSheet>("LogViewerWindow");
+			var styles = LoadWindowAsset<StyleSheet>("t:StyleSheet LogViewerWindow");
 			if (styles != null)
 			{
 				rootVisualElement.styleSheets.Add(styles);
 			}
 
+			BuildSplitView();
 			BuildToolbar();
 			BuildList();
 
@@ -100,8 +105,40 @@ namespace DTech.Logging.Editor
 			_footerLabel = rootVisualElement.Q<Label>("footer-label");
 			_emptyHint = rootVisualElement.Q<Label>("empty-hint");
 
+			_detailLabel.selection.isSelectable = true;
+			ApplyFont(_detailLabel);
+
 			_lastVersion = -1;
 			OnUpdate();
+		}
+
+		private void BuildSplitView()
+		{
+			VisualElement content = rootVisualElement.Q<VisualElement>("content");
+			VisualElement listHost = rootVisualElement.Q<VisualElement>("list-host");
+			ScrollView detail = rootVisualElement.Q<ScrollView>("detail");
+
+			var splitView = new TwoPaneSplitView(1, 150f, TwoPaneSplitViewOrientation.Vertical);
+			splitView.AddToClassList("lvw-splitter");
+			splitView.Add(listHost);
+			splitView.Add(detail);
+			content.Add(splitView);
+		}
+
+		private static T LoadWindowAsset<T>(string filter) where T : UnityEngine.Object
+		{
+			string[] guids = AssetDatabase.FindAssets(filter);
+			for (int i = 0; i < guids.Length; i++)
+			{
+				string path = AssetDatabase.GUIDToAssetPath(guids[i]);
+				var asset = AssetDatabase.LoadAssetAtPath<T>(path);
+				if (asset != null)
+				{
+					return asset;
+				}
+			}
+
+			return null;
 		}
 
 		private void BuildToolbar()
@@ -113,10 +150,14 @@ namespace DTech.Logging.Editor
 
 			_autoScrollToggle = rootVisualElement.Q<ToolbarToggle>("tgl-autoscroll");
 			_autoScrollToggle.SetValueWithoutNotify(_autoScroll);
-			_autoScrollToggle.RegisterValueChangedCallback(evt => _autoScroll = evt.newValue);
+			_autoScrollToggle.RegisterValueChangedCallback(evt =>
+			{
+				_autoScroll = evt.newValue;
+				_settings.SetAutoScroll(evt.newValue);
+			});
 
 			VisualElement levelHost = rootVisualElement.Q<VisualElement>("level-toggles");
-			foreach (LogLevel level in DisplayLevels)
+			foreach (LogLevel level in _displayLevels)
 			{
 				LogLevel captured = level;
 				var toggle = new ToolbarToggle
@@ -164,6 +205,7 @@ namespace DTech.Logging.Editor
 		{
 			_list = rootVisualElement.Q<ListView>("list");
 			_list.itemsSource = _filtered;
+			_list.fixedItemHeight = 20f;
 			_list.selectionType = SelectionType.Single;
 			_list.showAlternatingRowBackgrounds = AlternatingRowBackground.ContentOnly;
 			_list.makeItem = MakeRow;
@@ -196,6 +238,11 @@ namespace DTech.Logging.Editor
 			message.AddToClassList("lvw-row-msg");
 			row.Add(message);
 
+			ApplyFont(time);
+			ApplyFont(frame);
+			ApplyFont(tag);
+			ApplyFont(message);
+
 			row.userData = new RowElements
 			{
 				Stripe = stripe,
@@ -226,7 +273,7 @@ namespace DTech.Logging.Editor
 			refs.Message.style.color = levelColor;
 
 			refs.Tag.style.backgroundColor =
-				_settings.TryGetTagColor(entry.Tag, out Color highlight) ? highlight : DefaultPillColor;
+				_settings.TryGetTagColor(entry.Tag, out Color highlight) ? highlight : _defaultPillColor;
 		}
 
 		private void OnUpdate()
@@ -281,6 +328,8 @@ namespace DTech.Logging.Editor
 			{
 				_list.ScrollToItem(_filtered.Count - 1);
 			}
+
+			UpdateDetail();
 		}
 
 		private bool Passes(in LogEntry entry)
@@ -301,7 +350,9 @@ namespace DTech.Logging.Editor
 					entry.Message.IndexOf(_search, System.StringComparison.OrdinalIgnoreCase) >= 0;
 				bool inTag = entry.Tag != null &&
 					entry.Tag.IndexOf(_search, System.StringComparison.OrdinalIgnoreCase) >= 0;
-				if (!inMessage && !inTag)
+				bool inException = entry.Exception != null &&
+					entry.Exception.IndexOf(_search, System.StringComparison.OrdinalIgnoreCase) >= 0;
+				if (!inMessage && !inTag && !inException)
 				{
 					return false;
 				}
@@ -396,7 +447,49 @@ namespace DTech.Logging.Editor
 			}
 
 			EditorLogBuffer.SetCapacity(_settings.MaxBufferSize);
-			_list.RefreshItems();
+
+			foreach (KeyValuePair<LogLevel, ToolbarToggle> pair in _levelToggles)
+			{
+				pair.Value.style.color = _settings.GetLevelColor(pair.Key);
+			}
+
+			bool monospace = _settings.UseMonospaceFont;
+			if (monospace != _monospaceActive)
+			{
+				_monospaceActive = monospace;
+				ApplyFont(_detailLabel);
+				_list.Rebuild();
+			}
+			else
+			{
+				_list.RefreshItems();
+			}
+		}
+
+		private static Font GetMonospaceFont()
+		{
+			if (_monospaceFont == null)
+			{
+				_monospaceFont = EditorGUIUtility.Load("Fonts/RobotoMono/RobotoMono-Regular.ttf") as Font;
+				if (_monospaceFont == null)
+				{
+					_monospaceFont = Font.CreateDynamicFontFromOSFont(new[] { "Menlo", "Consolas", "Courier New" }, 12);
+				}
+			}
+
+			return _monospaceFont;
+		}
+
+		private void ApplyFont(VisualElement element)
+		{
+			if (_monospaceActive)
+			{
+				element.style.unityFontDefinition = new StyleFontDefinition(GetMonospaceFont());
+			}
+			else
+			{
+				element.style.unityFontDefinition = StyleKeyword.Null;
+			}
 		}
 
 		private void OnUndoRedo()

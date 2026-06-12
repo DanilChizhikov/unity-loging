@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 
 namespace DTech.Logging.Editor
@@ -20,11 +21,24 @@ namespace DTech.Logging.Editor
 		[Header("Display")]
 		[SerializeField] private int _maxBufferSize = EditorLogBuffer.DefaultCapacity;
 		[SerializeField] private bool _autoScroll = true;
+		[SerializeField] private bool _useMonospaceFont;
 		[SerializeField] private bool _clearOnPlay = true;
-		
+
 		public int MaxBufferSize => Mathf.Max(EditorLogBuffer.MinCapacity, _maxBufferSize);
 		public bool AutoScroll => _autoScroll;
+		public bool UseMonospaceFont => _useMonospaceFont;
 		public bool ClearOnPlay => _clearOnPlay;
+
+		internal void SetAutoScroll(bool value)
+		{
+			if (_autoScroll == value)
+			{
+				return;
+			}
+
+			_autoScroll = value;
+			EditorUtility.SetDirty(this);
+		}
 
 		public Color GetLevelColor(LogLevel level)
 		{

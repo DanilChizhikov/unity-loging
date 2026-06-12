@@ -13,18 +13,14 @@
         </uie:Toolbar>
 
         <ui:VisualElement name="content" class="lvw-content">
-            <ui:TwoPaneSplitView name="splitter" class="lvw-splitter" orientation="Vertical"
-                                 fixed-pane-index="1" fixed-pane-initial-dimension="150">
-                <ui:VisualElement name="list-host" class="lvw-list-host">
-                    <ui:ListView name="list" class="lvw-list" fixed-item-height="20"
-                                 selection-type="Single"/>
-                    <ui:Label name="empty-hint" class="lvw-empty-hint"
-                              text="No logs captured yet. Enter Play mode and log through DTech.Logging.Logger."/>
-                </ui:VisualElement>
-                <ui:ScrollView name="detail" class="lvw-detail">
-                    <ui:Label name="detail-label" class="lvw-detail-label"/>
-                </ui:ScrollView>
-            </ui:TwoPaneSplitView>
+            <ui:VisualElement name="list-host" class="lvw-list-host">
+                <ui:ListView name="list" class="lvw-list" selection-type="Single"/>
+                <ui:Label name="empty-hint" class="lvw-empty-hint" picking-mode="Ignore"
+                          text="No logs captured yet. Enter Play mode and log through DTech.Logging.Logger."/>
+            </ui:VisualElement>
+            <ui:ScrollView name="detail" class="lvw-detail">
+                <ui:Label name="detail-label" class="lvw-detail-label"/>
+            </ui:ScrollView>
         </ui:VisualElement>
 
         <ui:VisualElement name="footer" class="lvw-footer">

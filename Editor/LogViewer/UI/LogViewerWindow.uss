@@ -1,9 +1,14 @@
 .lvw-root {
     flex-grow: 1;
+    min-height: 0;
 }
 
 .lvw-toolbar {
     flex-shrink: 0;
+}
+
+.lvw-tb-btn {
+    -unity-text-align: middle-center;
 }
 
 .lvw-tb-spacer {
@@ -17,7 +22,7 @@
 
 .lvw-level-toggles {
     flex-direction: row;
-    align-items: center;
+    align-items: stretch;
 }
 
 .lvw-level-toggle {
@@ -31,22 +36,27 @@
 .lvw-search-field {
     width: 200px;
     margin-left: 2px;
+    flex-shrink: 0;
 }
 
 .lvw-content {
     flex-grow: 1;
+    min-height: 0;
 }
 
 .lvw-splitter {
     flex-grow: 1;
+    min-height: 0;
 }
 
 .lvw-list-host {
     flex-grow: 1;
+    min-height: 0;
 }
 
 .lvw-list {
     flex-grow: 1;
+    min-height: 0;
 }
 
 .lvw-empty-hint {
@@ -62,7 +72,6 @@
 .lvw-row {
     flex-direction: row;
     align-items: center;
-    height: 20px;
     padding-left: 2px;
     padding-right: 4px;
 }
@@ -83,7 +92,7 @@
 }
 
 .lvw-row-frame {
-    width: 50px;
+    width: 44px;
     flex-shrink: 0;
     color: rgb(120, 120, 120);
     font-size: 11px;
@@ -106,14 +115,16 @@
 
 .lvw-row-msg {
     flex-grow: 1;
+    flex-shrink: 1;
     overflow: hidden;
-    white-space: nowrap;
     text-overflow: ellipsis;
+    white-space: nowrap;
     font-size: 11px;
 }
 
 .lvw-detail {
     flex-grow: 1;
+    min-height: 0;
     background-color: rgba(0, 0, 0, 0.15);
 }
 

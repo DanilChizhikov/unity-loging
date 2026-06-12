@@ -12,12 +12,6 @@ namespace DTech.Logging.Editor
 
 		private static LogViewerSettings _cached;
 
-		[InitializeOnLoadMethod]
-		private static void EnsureExists()
-		{
-			GetOrCreate();
-		}
-
 		public static LogViewerSettings GetOrCreate()
 		{
 			if (_cached != null)
